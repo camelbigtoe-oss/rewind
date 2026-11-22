@@ -193,7 +193,7 @@ const Rounds = (() => {
           b.querySelector("span").textContent = `${vj.name} ${said} ${vj.ok ? "✔" : "✘"}${vj.pick != null ? ` (${(vj.at / 1000).toFixed(1)}s)` : ""}`;
         }
         if (!opts.quick) {
-          const words = ok ? ["BAM!", "POW!", "ZAP!", "WHAM!", "KAPOW!", "BOOM!", "SMASH!"] : ["OOF!", "ARGH!", "WHIFF!", "OUCH!", "NOPE!"];
+          const words = ok ? ["NICE!", "RIGHT!", "GREAT!", "SUGOI!", "BINGO!"] : ["MISS!", "NOPE!", "OUCH!", "NOT!"];
           const b = document.createElement("div"); b.className = "burst " + (ok ? "ok" : "no");
           b.innerHTML = `<span>${words[Math.floor(Math.random() * words.length)]}</span>`; card.appendChild(b);
         }

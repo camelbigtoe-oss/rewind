@@ -109,12 +109,12 @@ const Cast = (() => {
 
   // ---------- channel themes ----------
   const THEMES = [
-    { id: "saturday", name: "Comic Classic", lv: 1, desc: "Bold inks, primary colours, lightning skies." },
-    { id: "grunge", name: "Thunderstorm", lv: 3, desc: "Rain, rooftops and forked lightning." },
-    { id: "rave", name: "Neon Dojo", lv: 6, desc: "Glowing kanji-free neon and lasers." },
-    { id: "pastel", name: "Sunset Rooftop", lv: 10, desc: "A city skyline at golden hour." },
-    { id: "arcade", name: "Arcade Grid", lv: 14, desc: "Neon grid and a setting sun." },
-    { id: "hyper", name: "Hyper Combo", lv: 20, desc: "Colours shift like a super move." },
+    { id: "saturday", name: "Dusk City", lv: 1, desc: "A striped sun setting over the city." },
+    { id: "grunge", name: "Midnight Rain", lv: 3, desc: "Moonlight, rain and quiet streets." },
+    { id: "rave", name: "Neon Night", lv: 6, desc: "Violet sky and cyan neon." },
+    { id: "pastel", name: "Sunrise", lv: 10, desc: "Morning gold over the skyline." },
+    { id: "arcade", name: "Synth Sunset", lv: 14, desc: "A glowing grid running to the horizon." },
+    { id: "hyper", name: "Hyper Color", lv: 20, desc: "The sky keeps changing colour." },
     { id: "gold", name: "Gold Champion", ach: "champion", desc: "For the owner of the network." },
   ];
 

@@ -168,7 +168,7 @@ const Modes = (() => {
     const vj = Cast.VJ[vjId], p = Core.me();
     const pl = { prof: p, name: p.name, av: p.av, score: 0, streak: 0, asked: 0, right: 0, xp: 0 };
     const perk = cohost && cohost !== vjId ? { id: Cast.VJ[cohost].perk, left: RPG.perkUses(p, cohost) } : null;
-    Sound.want("war");
+    Sound.want("war"); FX.setMood("war");
     await FX.burst(400);
     await new Promise((res) => {
       app().innerHTML = `<div class="screen vs"><div class="vsbg"></div><div class="vsrow"><div class="vsl">${Avatar.svg(p.av)}<b>${esc(p.name)}</b><small>LV ${p.lv}</small></div><div class="vsx">VS</div><div class="vsr">${Avatar.svg(vj.spec)}<b>${esc(vj.name)}</b><small>${esc(vj.style)} · LV ${vj.lv}</small></div></div>
@@ -224,6 +224,7 @@ const Modes = (() => {
     Core.save();
     Sound.want("menu");
     await FX.burst(400);
+    if (won) FX.cheer(); else FX.gasp();
     await new Promise((res) => {
       app().innerHTML = `<div class="screen vs end ${won ? "won" : "lost"}"><div class="vsbg"></div><h1 class="logo small">${won ? "YOU WIN!" : "CANCELLED!"}</h1>
         <div class="vsrow"><div class="vsl">${Avatar.svg(p.av, { expr: won ? "happy" : "sad" })}</div><div class="vsr">${Avatar.svg(vj.spec, { expr: won ? "sad" : "happy" })}</div></div>

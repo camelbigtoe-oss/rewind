@@ -1,152 +1,158 @@
-// Visual effects: the animated arcade/comic background for each theme, a diagonal "slash" wipe between
-// screens, and confetti. Backgrounds draw on #fx; the wipe draws on #static over everything.
+// Pixel backdrops in a 90s anime style (the same look as THE RUNDOWN), drawn at low resolution and
+// scaled up: a dithered sky, a striped sun on the horizon, a city skyline with flickering windows,
+// drifting clouds and a shimmering reflection. Each channel theme is a different sky. FX.mood("war")
+// swaps to red speed lines for fights. Also: a quick pixel wipe between screens, and confetti.
 const FX = (() => {
   "use strict";
-  const cv = document.getElementById("fx"), x = cv.getContext("2d");
+  const cv = document.getElementById("fx"), g = cv.getContext("2d");
   const st = document.getElementById("static"), sx = st.getContext("2d");
-  let W = 0, H = 0, dpr = 1, theme = "saturday", items = [], sky = [], t0 = performance.now(), flash = 0, nextBolt = 2, bolt = null, dots = null;
-  const PAL = {
-    saturday: { bg: ["#061033", "#1f3f9a"], ray: "#2a5ad0", c: ["#e8202a", "#ffd21f", "#2fd8ff", "#ffffff"], city: true, bolts: 9 },
-    grunge: { bg: ["#05070c", "#26303f"], ray: null, c: ["#c9d4e0"], city: true, rain: true, bolts: 4 },
-    rave: { bg: ["#07001a", "#1a0040"], ray: null, c: ["#ff1f8f", "#00f0ff", "#e6ff00", "#8a00ff"], lasers: true },
-    pastel: { bg: ["#2a1030", "#ff6a4a"], ray: null, c: ["#ffd26a", "#ffffff"], city: true, sun: true },
-    arcade: { bg: ["#0b0020", "#2a0050"], ray: null, c: ["#ff2fd0", "#2fe5ff", "#ffb23f"], grid: true, sun: true },
-    hyper: { bg: ["#100020", "#002030"], ray: "#ffffff", c: ["#ff3f8e", "#ffe14d", "#2fd8ff", "#1ee3a1", "#7b3cff"], hyper: true },
-    gold: { bg: ["#1a1005", "#4a3008"], ray: "#d9a520", c: ["#ffd23f", "#fff6c8", "#d9a520"], sparks: true },
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const PX = 3;
+  let W = 0, H = 0, theme = "saturday", mood = "city", last = 0, scene = null, flash = null;
+  const t0 = performance.now();
+  const SKIES = {
+    saturday: { name: "dusk", bands: ["#140f33", "#1d1650", "#2b1c6e", "#47238a", "#7a2f96", "#c0418f", "#ff6f8e", "#ffa07a"], sun: ["#fff1a8", "#ffd27a", "#ff9a6a", "#ff5f8a"], city: "#1a1140", ground: "#120c2c", win: ["#ffd27a", "#ff8fb0", "#8fe3ff"], refl: "255,140,150" },
+    grunge: { bands: ["#06070f", "#0b0e1c", "#121a2e", "#1a2640", "#24334f", "#30405e", "#3e5070", "#4e6280"], sun: ["#d8e0f0", "#b0c0d8", "#8ea0c0", "#6a7ea0"], city: "#0a0d18", ground: "#05060c", win: ["#ffd27a", "#c8d8ff"], refl: "180,200,230", rain: true, moon: true },
+    rave: { bands: ["#08001a", "#140032", "#220050", "#36006a", "#4a0a80", "#6a1a9a", "#9a2ab0", "#d040c0"], sun: ["#fff", "#9ff8ff", "#40e8ff", "#ff40d0"], city: "#10002a", ground: "#06000f", win: ["#40f0ff", "#ff40d0", "#e6ff40"], refl: "64,232,255" },
+    pastel: { bands: ["#2a1850", "#4a2470", "#7a3080", "#b8487a", "#e8706a", "#ffa060", "#ffc870", "#ffe39a"], sun: ["#fffbe0", "#fff1a8", "#ffd27a", "#ffb060"], city: "#2a1640", ground: "#1e1236", win: ["#fff1a8", "#ffb0c8", "#a8f0ff"], refl: "255,200,140" },
+    arcade: { bands: ["#0b0020", "#150035", "#22004a", "#35005e", "#520a6e", "#7a1478", "#b02a7a", "#ff4a8a"], sun: ["#ffe14d", "#ffb23f", "#ff6a5a", "#ff2fd0"], city: "#0e0026", ground: "#0b0020", win: ["#2fe5ff", "#ff2fd0"], refl: "255,47,208", grid: true },
+    hyper: { bands: ["#002a3a", "#004a5a", "#1a6a6a", "#4a8a5a", "#8a9a3a", "#c88a3a", "#e86a5a", "#ff5a8a"], sun: ["#fff", "#ffe14d", "#ff9a3a", "#ff3f8e"], city: "#102030", ground: "#081018", win: ["#ffe14d", "#2fd8ff", "#ff3f8e"], refl: "255,220,120" },
+    gold: { bands: ["#1a1005", "#2e1c08", "#4a2e0c", "#6a4410", "#8e5e18", "#b88024", "#e0a830", "#ffd23f"], sun: ["#fffbe0", "#fff1a8", "#ffe070", "#ffc040"], city: "#1a1005", ground: "#120a02", win: ["#fff1a8", "#ffd23f"], refl: "255,220,120" },
   };
-  const R = (a, b) => a + Math.random() * (b - a);
+  const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  function rng(seed) { let s = seed >>> 0; return () => ((s = (Math.imul(s ^ (s >>> 15), 2246822507) + 0x9e3779b9) >>> 0) / 4294967296); }
+  const hex = (h) => { const n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
   function size() {
-    dpr = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
-    for (const c of [cv, st]) { c.width = W * dpr; c.height = H * dpr; c.style.width = W + "px"; c.style.height = H + "px"; }
-    x.setTransform(dpr, 0, 0, dpr, 0, 0); sx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // halftone dot tile
-    const d = document.createElement("canvas"); d.width = d.height = 8; const dc = d.getContext("2d");
-    dc.fillStyle = "rgba(0,0,0,.35)"; dc.beginPath(); dc.arc(4, 4, 1.4, 0, 6.3); dc.fill();
-    dots = x.createPattern(d, "repeat");
-    seed();
+    W = Math.ceil(innerWidth / PX); H = Math.ceil(innerHeight / PX); cv.width = W; cv.height = H; scene = null;
+    st.width = innerWidth; st.height = innerHeight;
   }
-  function seed() {
-    const p = PAL[theme];
-    // skyline: random building blocks with lit windows
-    sky = []; let bx = -10;
-    while (bx < W + 20) { const w = R(28, 70), h = R(H * 0.05, H * 0.17); const wins = []; for (let yy = 8; yy < h - 8; yy += 12) for (let xx = 6; xx < w - 6; xx += 10) if (Math.random() < 0.35) wins.push([xx, yy, Math.random()]); sky.push({ x: bx, w, h, wins, ant: Math.random() < 0.2 }); bx += w + R(-6, 4); }
-    const n = p.rain ? 140 : p.sparks ? 60 : 36;
-    items = Array.from({ length: n }, () => ({ x: R(0, W), y: R(0, H), s: R(2, 5), vx: p.rain ? R(-60, -30) : R(-10, 10), vy: p.rain ? R(500, 800) : R(-30, -8), c: p.c[Math.floor(Math.random() * p.c.length)], ph: R(0, 6.3) }));
-  }
-  function makeBolt() {
-    const pts = []; let px = R(W * 0.1, W * 0.9), py = 0;
-    while (py < H * R(0.45, 0.8)) { pts.push([px, py]); px += R(-50, 50); py += R(30, 70); }
-    pts.push([px, py]); return pts;
-  }
-  function rays(t, col, alpha) {
-    const cx = W / 2, cy = H * 0.38, n = 28, rot = t * 0.04, r = Math.hypot(W, H);
-    x.save(); x.globalAlpha = alpha; x.fillStyle = col;
-    for (let i = 0; i < n; i++) { const a = rot + (i / n) * Math.PI * 2, b = a + Math.PI / n * 0.9; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); x.lineTo(cx + Math.cos(b) * r, cy + Math.sin(b) * r); x.fill(); }
-    x.restore();
-  }
-  function grid(t, col, horizon) {
-    const hz = H * horizon;
-    x.strokeStyle = col; x.lineWidth = 1.5; x.globalAlpha = 0.7;
-    for (let k = 0; k < 14; k++) { const f = (k + (t * 0.6) % 1) / 14; const y = hz + (H - hz) * f * f; x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke(); }
-    for (let k = -12; k <= 12; k++) { x.beginPath(); x.moveTo(W / 2 + k * 8, hz); x.lineTo(W / 2 + k * W * 0.18, H); x.stroke(); }
-    x.globalAlpha = 1;
-  }
-  function city(t, lit) {
-    const base = H;
-    for (const b of sky) {
-      x.fillStyle = "#04040c"; x.fillRect(b.x, base - b.h, b.w, b.h);
-      if (b.ant) { x.fillRect(b.x + b.w / 2 - 1, base - b.h - 18, 2, 18); x.fillStyle = Math.sin(t * 3 + b.x) > 0 ? "#ff3030" : "#400"; x.fillRect(b.x + b.w / 2 - 2, base - b.h - 20, 4, 4); }
-      for (const [wx, wy, ph] of b.wins) { x.fillStyle = lit && Math.sin(t * 0.5 + ph * 40) > -0.9 ? "#ffd86a" : "#1a1a30"; x.fillRect(b.x + wx, base - b.h + wy, 4, 5); }
+  addEventListener("resize", size);
+  size();
+
+  // ---------- city at dusk (or whatever this theme's sky is) ----------
+  function build(P) {
+    const r = rng(11);
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const x = c.getContext("2d"), hz = Math.floor(H * 0.62);
+    const img = x.createImageData(W, hz), d = img.data, cols = P.bands.map(hex), n = cols.length - 1;
+    for (let y = 0; y < hz; y++) {
+      const f = (y / hz) * n;
+      for (let i = 0; i < W; i++) {
+        const idx = Math.min(n, Math.floor(f) + (f % 1 > BAYER[(y % 4) * 4 + (i % 4)] / 16 ? 1 : 0));
+        const o = (y * W + i) * 4, cc = cols[idx]; d[o] = cc[0]; d[o + 1] = cc[1]; d[o + 2] = cc[2]; d[o + 3] = 255;
+      }
     }
+    x.putImageData(img, 0, 0);
+    const sr = Math.max(18, Math.floor(W * 0.2)), sxx = Math.floor(W * 0.5), sy = hz;
+    if (P.moon) { const mr = Math.floor(sr * 0.5), mx = Math.floor(W * 0.75), my = Math.floor(hz * 0.25); for (let y = -mr; y <= mr; y++) { const w = Math.floor(Math.sqrt(mr * mr - y * y)); x.fillStyle = "#e8eef8"; x.fillRect(mx - w, my + y, w * 2, 1); } x.fillStyle = "#c0c8d8"; x.fillRect(mx - 3, my - 2, 3, 2); x.fillRect(mx + 2, my + 3, 2, 2); }
+    else for (let y = -sr; y < 0; y++) {
+      const band = Math.floor(((y + sr) / sr) * P.sun.length);
+      if (y > -sr * 0.55 && ((-y) % 5 === 0 || (y > -sr * 0.3 && (-y) % 3 === 0))) continue;
+      const w = Math.floor(Math.sqrt(sr * sr - y * y));
+      x.fillStyle = P.sun[Math.min(P.sun.length - 1, band)]; x.fillRect(sxx - w, sy + y, w * 2, 1);
+    }
+    const wins = [];
+    for (let i = -4; i < W + 4;) {
+      const w = 6 + Math.floor(r() * 10), h = 8 + Math.floor(r() * (H * 0.16)) + (Math.abs(i - sxx) < sr ? 0 : Math.floor(r() * 10));
+      x.fillStyle = P.city; x.fillRect(i, hz - h, w, h);
+      if (r() < 0.25) x.fillRect(i + Math.floor(w / 2), hz - h - 4, 1, 4);
+      for (let wy = hz - h + 3; wy < hz - 2; wy += 3) for (let wx = i + 2; wx < i + w - 1; wx += 3) if (r() < 0.32) wins.push({ x: wx, y: wy, c: P.win[Math.floor(r() * P.win.length)], ph: r() * 40 });
+      i += w + (r() < 0.3 ? 1 : 0);
+    }
+    x.fillStyle = P.ground; x.fillRect(0, hz, W, H - hz);
+    if (P.grid) { x.fillStyle = "rgba(255,47,208,.5)"; for (let k = 1; k < 12; k++) x.fillRect(0, hz + Math.floor(k * k * (H - hz) / 140), W, 1); for (let k = -14; k <= 14; k++) for (let y = hz; y < H; y++) { const xx = Math.round(sxx + k * 3 + (k * (y - hz)) / 6); if (xx >= 0 && xx < W) x.fillRect(xx, y, 1, 1); } }
+    x.fillStyle = "rgba(255,255,255,.06)"; x.fillRect(0, hz, W, 1);
+    const stars = Array.from({ length: Math.floor(W * 0.5) }, () => ({ x: Math.floor(r() * W), y: Math.floor(r() * hz * 0.5), ph: r() * 6.3, b: r() < 0.15 }));
+    const clouds = Array.from({ length: 5 }, (_, i) => ({ x: r() * W, y: 18 + i * Math.floor(hz * 0.09) + Math.floor(r() * 6), w: 24 + Math.floor(r() * 40), sp: 0.4 + r() * 0.6 }));
+    const rain = P.rain ? Array.from({ length: 120 }, () => ({ x: r() * W, y: r() * H, sp: 60 + r() * 60 })) : [];
+    return { c, hz, sx: sxx, sr, wins, stars, clouds, rain, P };
+  }
+  function city(t) {
+    const P = SKIES[theme] || SKIES.saturday;
+    if (!scene || scene.P !== P) scene = build(P);
+    const S = scene;
+    g.drawImage(S.c, 0, 0);
+    for (const s of S.stars) {
+      const a = reduce ? 0.6 : 0.35 + 0.35 * Math.sin(t * 0.8 + s.ph);
+      g.fillStyle = `rgba(255,246,232,${a.toFixed(2)})`; g.fillRect(s.x, s.y, 1, 1);
+      if (s.b) { g.fillRect(s.x - 1, s.y, 3, 1); g.fillRect(s.x, s.y - 1, 1, 3); }
+    }
+    for (const cl of S.clouds) {
+      const x = ((cl.x + (reduce ? 0 : t * cl.sp)) % (W + cl.w * 2)) - cl.w;
+      g.fillStyle = "rgba(90,50,140,.55)"; g.fillRect(Math.floor(x), cl.y, cl.w, 3); g.fillRect(Math.floor(x + cl.w * 0.2), cl.y - 2, Math.floor(cl.w * 0.5), 2);
+      g.fillStyle = "rgba(255,140,170,.45)"; g.fillRect(Math.floor(x + 2), cl.y + 3, cl.w - 4, 1);
+    }
+    for (const w of S.wins) { if (!reduce && Math.sin(t * 0.3 + w.ph) > 0.92) continue; g.fillStyle = w.c; g.fillRect(w.x, w.y, 1, 1); }
+    for (let i = 0, y = S.hz + 2; y < H; y += 3, i++) {
+      const w = Math.max(2, Math.floor(S.sr * (1 - i * 0.07) + (reduce ? 0 : Math.sin(t * 1.5 + i) * 3)));
+      if (w <= 2) break;
+      g.fillStyle = `rgba(${S.P.refl},${Math.max(0.05, 0.4 - i * 0.03).toFixed(2)})`; g.fillRect(S.sx - w, y, w * 2, 1);
+    }
+    if (S.rain.length) { g.fillStyle = "rgba(190,210,240,.35)"; for (const d of S.rain) { const y = (d.y + t * d.sp) % H, x = (d.x - t * 10 + W) % W; g.fillRect(Math.floor(x), Math.floor(y), 1, 3); } }
+    if (theme === "hyper") { g.fillStyle = `hsla(${(t * 30) % 360},90%,60%,.18)`; g.fillRect(0, 0, W, H); }
+  }
+  // ---------- red speed lines for fights ----------
+  function speed(t) {
+    g.fillStyle = "#1a0712"; g.fillRect(0, 0, W, H);
+    const cx = W / 2, cy = H * 0.38, R = Math.hypot(W, H), n = 40, rot = reduce ? 0 : t * 0.05;
+    for (let i = 0; i < n; i++) {
+      const a = rot + (i / n) * Math.PI * 2, w = i % 3 === 0 ? 0.05 : 0.025;
+      g.fillStyle = i % 2 ? "rgba(255,77,94,.22)" : "rgba(255,200,210,.08)";
+      g.beginPath(); g.moveTo(cx + Math.cos(a) * 14, cy + Math.sin(a) * 14);
+      g.lineTo(cx + Math.cos(a - w) * R, cy + Math.sin(a - w) * R); g.lineTo(cx + Math.cos(a + w) * R, cy + Math.sin(a + w) * R); g.closePath(); g.fill();
+    }
+    const grd = g.createRadialGradient(cx, cy, 2, cx, cy, W * 0.5);
+    grd.addColorStop(0, "rgba(255,120,130,.25)"); grd.addColorStop(1, "rgba(255,120,130,0)");
+    g.fillStyle = grd; g.fillRect(0, 0, W, H);
   }
   function frame(now) {
     requestAnimationFrame(frame);
-    const t = (now - t0) / 1000, dt = Math.min(0.05, (now - (frame.last || now)) / 1000); frame.last = now;
-    if (!Core.set.motion && frame.drawn) return;
-    frame.drawn = true;
-    const p = PAL[theme];
-    const g = x.createLinearGradient(0, 0, 0, H);
-    if (p.hyper) { const h = (t * 25) % 360; g.addColorStop(0, `hsl(${h},80%,18%)`); g.addColorStop(1, `hsl(${(h + 140) % 360},80%,26%)`); }
-    else { g.addColorStop(0, p.bg[0]); g.addColorStop(1, p.bg[1]); }
-    x.fillStyle = g; x.fillRect(0, 0, W, H);
-    if (p.ray) rays(t, p.ray, p.hyper ? 0.08 : 0.22);
-    if (p.sun) {
-      const hz = H * (p.grid ? 0.55 : 0.72), r = Math.min(170, W * 0.34), sg = x.createLinearGradient(0, hz - r, 0, hz);
-      sg.addColorStop(0, "#ffe14d"); sg.addColorStop(1, p.grid ? "#ff2fd0" : "#ff5a3a");
-      x.fillStyle = sg; x.beginPath(); x.arc(W / 2, hz, r, Math.PI, 0); x.fill();
-      x.fillStyle = p.bg[0]; for (let k = 0; k < 6; k++) x.fillRect(0, hz - 10 - k * 16, W, 3 + k * 0.6);
-      if (p.grid) { x.fillStyle = "#0b0020"; x.fillRect(0, hz, W, H - hz); grid(t, "#ff2fd0", 0.55); }
-    }
-    if (p.lasers) {
-      for (let k = 0; k < 6; k++) { const a = Math.sin(t * 0.7 + k) * 0.9; x.save(); x.translate(W * (k / 5), 0); x.rotate(a); x.globalAlpha = 0.28; x.fillStyle = p.c[k % p.c.length]; x.beginPath(); x.moveTo(0, 0); x.lineTo(-30, H * 1.4); x.lineTo(30, H * 1.4); x.fill(); x.restore(); }
-      x.globalAlpha = 1; grid(t, "#00f0ff", 0.78);
-    }
-    if (p.hyper) for (let k = 0; k < 5; k++) { const bx = W * (0.5 + 0.4 * Math.sin(t * 0.3 + k * 1.7)), by = H * (0.5 + 0.4 * Math.cos(t * 0.25 + k * 2.1)); const rg = x.createRadialGradient(bx, by, 0, bx, by, W * 0.5); rg.addColorStop(0, p.c[k] + "55"); rg.addColorStop(1, p.c[k] + "00"); x.fillStyle = rg; x.fillRect(0, 0, W, H); }
-    // lightning
-    if (p.bolts) {
-      nextBolt -= dt;
-      if (nextBolt <= 0) { bolt = makeBolt(); flash = 1; nextBolt = R(p.bolts * 0.5, p.bolts * 1.4); }
-      if (flash > 0) {
-        x.fillStyle = `rgba(200,220,255,${flash * 0.25})`; x.fillRect(0, 0, W, H);
-        if (bolt && flash > 0.4) { x.strokeStyle = `rgba(255,255,255,${flash})`; x.lineWidth = 4; x.shadowColor = "#9fd8ff"; x.shadowBlur = 20; x.beginPath(); bolt.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.stroke(); x.shadowBlur = 0; }
-        flash -= dt * 2.2;
-      }
-    }
-    // particles: rain, sparks or drifting stars
-    for (const i of items) {
-      i.x += i.vx * dt; i.y += i.vy * dt;
-      if (i.y < -20) { i.y = H + 10; i.x = R(0, W); } if (i.y > H + 20) { i.y = -10; i.x = R(0, W); }
-      if (i.x < -20) i.x = W + 10; if (i.x > W + 20) i.x = -10;
-      if (p.rain) { x.strokeStyle = "rgba(200,215,230,.3)"; x.lineWidth = 1.2; x.beginPath(); x.moveTo(i.x, i.y); x.lineTo(i.x + i.vx * 0.03, i.y + i.vy * 0.03); x.stroke(); continue; }
-      const k = 0.5 + Math.sin(t * 3 + i.ph) * 0.5;
-      x.globalAlpha = p.sparks ? k : 0.35 + k * 0.5; x.fillStyle = i.c;
-      if (p.sparks) { x.save(); x.translate(i.x, i.y); x.rotate(t + i.ph); x.fillRect(-i.s, -0.8, i.s * 2, 1.6); x.fillRect(-0.8, -i.s, 1.6, i.s * 2); x.restore(); }
-      else x.fillRect(i.x, i.y, 2, 2);
-      x.globalAlpha = 1;
-    }
-    if (p.city) city(t, true);
-    // halftone print texture over everything
-    x.fillStyle = dots; x.globalAlpha = 0.5; x.fillRect(0, 0, W, H); x.globalAlpha = 1;
+    if (now - last < 100) return; // 10 fps keeps it calm and light on battery
+    last = now;
+    const t = (now - t0) / 1000;
+    if (mood === "war") speed(t); else city(t);
+    if (flash && now < flash.until) { g.fillStyle = `rgba(${flash.rgb},${(((flash.until - now) / 300) * 0.35).toFixed(2)})`; g.fillRect(0, 0, W, H); }
   }
-  function setTheme(id) { theme = PAL[id] ? id : "saturday"; document.body.dataset.theme = theme; seed(); frame.drawn = false; }
+  requestAnimationFrame(frame);
 
-  // ---------- screen wipe: two diagonal slashes cross the screen, then a white flash ----------
+  function setTheme(id) { theme = SKIES[id] ? id : "saturday"; document.body.dataset.theme = theme; scene = null; }
+  function setMood(m) { mood = m === "war" ? "war" : "city"; }
+
+  // ---------- pixel wipe: dark bands close in from both sides, then open ----------
   let wipeStart = 0, wipeLen = 0, wipeRaf = 0;
   function wipeFrame() {
     const f = (performance.now() - wipeStart) / wipeLen;
-    sx.clearRect(0, 0, W, H);
+    sx.clearRect(0, 0, st.width, st.height);
     if (f >= 1) { st.style.opacity = 0; wipeRaf = 0; return; }
     st.style.opacity = 1;
-    const cs = getComputedStyle(document.body), c1 = cs.getPropertyValue("--c1").trim() || "#e8202a", c3 = cs.getPropertyValue("--c3").trim() || "#ffd21f";
-    const sweep = (off, col, dir) => {
-      const e = Math.min(1, Math.max(0, (f - off) * 2.2)), pos = (dir > 0 ? -1.2 : 2.2) * W + dir * e * 3.4 * W;
-      sx.fillStyle = col; sx.beginPath(); sx.moveTo(pos, 0); sx.lineTo(pos + W * 0.7, 0); sx.lineTo(pos + W * 0.7 - H * 0.5, H); sx.lineTo(pos - H * 0.5, H); sx.fill();
-    };
-    sweep(0, c1, 1); sweep(0.08, "#0b0b14", 1); sweep(0.16, c3, -1);
-    if (f > 0.35 && f < 0.6) { sx.fillStyle = `rgba(255,255,255,${0.6 - Math.abs(f - 0.47) * 4})`; sx.fillRect(0, 0, W, H); }
+    const k = f < 0.5 ? f * 2 : (1 - f) * 2, rows = 24, rh = Math.ceil(st.height / rows);
+    for (let i = 0; i < rows; i++) {
+      const w = Math.min(1, k * 1.3 - (i % 2) * 0.12) * st.width / 2; if (w <= 0) continue;
+      sx.fillStyle = i % 2 ? "#120c2c" : "#1d1650";
+      sx.fillRect(0, i * rh, w, rh); sx.fillRect(st.width - w, i * rh, w, rh);
+    }
     wipeRaf = requestAnimationFrame(wipeFrame);
   }
   function burst(ms = 420) {
-    if (!Core.set.motion) ms = Math.min(ms, 140);
+    if (!Core.set.motion || reduce) ms = Math.min(ms, 140);
     wipeStart = performance.now(); wipeLen = ms; Sound.play("whoosh");
     if (!wipeRaf) wipeRaf = requestAnimationFrame(wipeFrame);
     return Core.sleep(ms * 0.55);
   }
+  const cheer = () => { flash = { until: performance.now() + 300, rgb: "255,246,232" }; };
+  const gasp = () => { flash = { until: performance.now() + 300, rgb: "255,77,94" }; };
 
   // ---------- confetti ----------
   function confetti(n = 40, el = document.body) {
     if (!Core.set.motion) return;
     const box = document.createElement("div"); box.className = "confetti"; el.appendChild(box);
-    const cols = ["#e8202a", "#ffd21f", "#1f5fe0", "#ffffff", "#2fd8ff"];
+    const cols = ["#ff6f8e", "#ffd166", "#6fe3ff", "#6ff0c8", "#fff6e8"];
     for (let i = 0; i < n; i++) {
       const p = document.createElement("i");
-      p.style.cssText = `left:${R(5, 95)}%;background:${cols[i % cols.length]};--dx:${R(-120, 120)}px;--r:${R(-720, 720)}deg;animation-delay:${R(0, 0.25)}s;animation-duration:${R(1.1, 1.9)}s;${i % 3 ? "" : "border-radius:50%;"}`;
+      p.style.cssText = `left:${Math.random() * 90 + 5}%;background:${cols[i % cols.length]};--dx:${Math.random() * 240 - 120}px;--r:${Math.random() * 1440 - 720}deg;animation-delay:${Math.random() * 0.25}s;animation-duration:${1.1 + Math.random() * 0.8}s;`;
       box.appendChild(p);
     }
     setTimeout(() => box.remove(), 2300);
   }
-
-  addEventListener("resize", size);
-  size(); requestAnimationFrame(frame);
-  return { setTheme, burst, confetti, get theme() { return theme; } };
+  return { setTheme, setMood, burst, confetti, cheer, gasp, get theme() { return theme; } };
 })();

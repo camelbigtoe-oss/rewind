@@ -306,7 +306,7 @@ const Avatar = (() => {
     }
   }
   // full avatar. opts: { expr: happy|sad|shock|talk, bg: false to skip the background, cls, anim }
-  function svg(spec, opts = {}) {
+  function vsvg(spec, opts = {}) {
     const s = { ...DEFAULT, ...spec }, id = ++uid;
     const sk = s.skin, skd = shade(sk, -0.14), hc = s.hairC, hs = shade(hc, -0.3), hl = shade(hc, 0.3);
     const head = HEADS[s.head] || HEADS.round;
@@ -346,6 +346,25 @@ const Avatar = (() => {
     </svg>`;
   }
 
+  // vector layers for the pixel renderer (pixel.js): each is an SVG snippet in the 200x240 box
+  function parts(spec) {
+    const s = { ...DEFAULT, ...spec }, id = ++uid;
+    const sk = s.skin, hc = s.hairC, hs = shade(hc, -0.3), hl = shade(hc, 0.3);
+    return {
+      s, head: HEADS[s.head] || HEADS.round,
+      hairBack: hairBack(s, hc, hs),
+      body: `<path d="M80 124 L78 164 H122 L120 124Z" fill="${sk}"/>${top(s, sk, id)}${neckwear(s)}`,
+      ears: `<ellipse cx="52" cy="98" rx="9" ry="12" fill="${sk}"/><ellipse cx="148" cy="98" rx="9" ry="12" fill="${sk}"/>`,
+      earwear: earwear(s), beard: beard(s, hc, hs),
+      hairFront: hairFront(s, hc, hs, hl), extras: glasses(s) + hat(s, hc) + phones(s),
+    };
+  }
+
+  // the avatar everywhere in the game is a pixel portrait (pixel.js); vsvg keeps the vector version
+  function svg(spec, opts = {}) {
+    return `<img class="av px ${opts.cls || ""} ${opts.anim === false ? "" : "bob"}" src="${Pixel.render(spec, opts)}" alt="" draggable="false">`;
+  }
+
   function random(rnd = Math.random, ok = () => true) {
     const p = (a) => { const l = a.filter((o) => typeof o === "string" || ok(o)); const v = l[Math.floor(rnd() * l.length)]; return typeof v === "string" ? v : v.id ?? v.c; };
     const ids = (k) => p(CATALOG[k]);
@@ -357,5 +376,5 @@ const Avatar = (() => {
     };
   }
 
-  return { svg, random, CATALOG, SKIN, HAIRC, COLORS, DEFAULT, shade };
+  return { svg, vsvg, parts, random, CATALOG, SKIN, HAIRC, COLORS, DEFAULT, shade };
 })();
