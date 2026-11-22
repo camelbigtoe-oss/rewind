@@ -403,8 +403,34 @@ const UI = (() => {
   }
 
   // ---------- boot ----------
+  // secret preview link: ?unlock=all opens everything for the current player (a backup is kept),
+  // ?unlock=reset puts that player back how they were. The address is tidied afterwards.
+  function unlockLink() {
+    const u = new URLSearchParams(location.search).get("unlock");
+    if (!u) return;
+    history.replaceState(null, "", location.pathname);
+    let p = Core.me();
+    if (u === "all") {
+      if (!p) p = Core.create("Preview", Avatar.random());
+      if (!p.backup) { const { backup, ...rest } = p; p.backup = JSON.parse(JSON.stringify(rest)); }
+      p.lv = RPG.MAXLV; p.xp = 0;
+      for (const id of Cast.ORDER) { if (!p.crew.includes(id)) p.crew.push(id); RPG.co(p, id).lv = 20; }
+      for (const a of Cast.ACH) p.ach[a.id] ||= Date.now();
+      for (const c of Cast.CAPS) p.caps[c.id] ||= 1;
+      for (const k of Core.CATS) p.stats[k] = Math.max(p.stats[k], 99);
+      p.packs = Math.max(p.packs, 5);
+      Core.save();
+      setTimeout(() => toast("🔓 EVERYTHING UNLOCKED for " + esc(p.name), 3500), 400);
+    } else if (u === "reset" && p && p.backup) {
+      const old = p.backup;
+      Object.keys(p).forEach((k) => delete p[k]); Object.assign(p, old);
+      Core.save();
+      setTimeout(() => toast("🔒 Back to normal for " + esc(p.name), 3500), 400);
+    }
+  }
   function boot() {
     applySet();
+    unlockLink();
     const p = Core.me(); if (p) FX.setTheme(p.theme);
     title();
     if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
