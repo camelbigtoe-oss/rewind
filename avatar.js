@@ -64,7 +64,7 @@ const Avatar = (() => {
     ears: [{ id: "none", name: "None" }, { id: "stud", name: "Studs" }, { id: "hoops", name: "Hoops" }, { id: "cross", name: "Dangly cross", lv: 8 }],
     phones: [{ id: "none", name: "None" }, { id: "foam", name: "Foam headphones", lv: 2 }, { id: "big", name: "DJ cans", vj: "spinz" }],
     bg: [
-      { id: "memphis", name: "Comic burst" }, { id: "checker", name: "Halftone" }, { id: "zigzag", name: "Lightning" }, { id: "stars", name: "Night city" },
+      { id: "memphis", name: "Spotlight" }, { id: "checker", name: "Halftone" }, { id: "zigzag", name: "Lightning" }, { id: "stars", name: "Night city" },
       { id: "speed", name: "Speed lines", lv: 3 }, { id: "grid", name: "Neon grid", lv: 6 }, { id: "flames", name: "Flames", lv: 9 }, { id: "bars", name: "Colour bars", lv: 11 },
       { id: "static", name: "Static", lv: 13 }, { id: "gold", name: "Gold champion", ach: "platinum" },
     ],
@@ -121,16 +121,36 @@ const Avatar = (() => {
     }
   }
   function brows(s, hc) {
-    const c = shade(hc, -0.35);
-    const w = s.brows === "thick" ? 7.5 : s.brows === "thin" ? 3.5 : 5.5;
-    switch (s.brows) {
-      case "angry": return `<path d="M64 80 L92 90 L90 84Z M136 80 L108 90 L110 84Z" fill="${c}" stroke="${c}" stroke-width="5" stroke-linejoin="round"/>`;
-      case "raised": return `<path d="M66 82 Q78 70 92 80 M108 80 Q122 70 134 82" stroke="${c}" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
-      case "uni": return `<path d="M64 84 L90 82 L100 86 L110 82 L136 84" stroke="${c}" stroke-width="7" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`;
-      default: return `<path d="M64 84 L80 80 L93 86 M136 84 L120 80 L107 86" stroke="${c}" stroke-width="${w}" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`;
-    }
+    const c = shade(hc, -0.45);
+    const shapes = {
+      normal: "M64 86 Q78 77 95 84 Q79 81 66 89Z",
+      thick: "M62 86 Q78 74 96 83 Q80 82 64 92Z",
+      thin: "M66 85 Q79 79 94 84 Q80 82 67 87Z",
+      angry: "M63 80 Q80 82 96 90 Q80 86 64 85Z",
+      raised: "M64 84 Q76 72 94 80 Q78 76 66 87Z",
+      uni: "M62 86 Q78 77 100 84 Q80 82 64 89Z",
+    };
+    const d = shapes[s.brows] || shapes.normal;
+    return `<path d="${d}" fill="${c}"/><path d="${d}" fill="${c}" transform="translate(200 0) scale(-1 1)"/>`;
   }
   function eyes(s, expr) {
+    // painted anime eye: shaded white, gradient iris, glossy highlights, heavy upper lash.
+    // Drawn once for the screen-left eye and mirrored for the other.
+    const painted = (k = 1, extra = false) => {
+      const ec = s.eyeC || "#2a1a10", eid = ++uid, skD = shade(s.skin, -0.38);
+      const one = `<clipPath id="ec${eid}"><path d="M65 96 Q78 84 94 92 Q82 102 65 96Z"/></clipPath>
+        <path d="M65 96 Q78 84 94 92 Q82 102 65 96Z" fill="#fbf7ff"/>
+        <g clip-path="url(#ec${eid})"><rect x="60" y="80" width="40" height="9" fill="#c8bce0" opacity=".7"/>
+          <ellipse cx="81" cy="94" rx="${4.8 * k}" ry="${5.6 * k}" fill="url(#ir${eid})"/><ellipse cx="81" cy="94.5" rx="${2 * k}" ry="${2.7 * k}" fill="#10061a"/>
+          <circle cx="${79 - k}" cy="91.6" r="${1.7 * k}" fill="#fff"/><circle cx="83.6" cy="97" r=".9" fill="#fff" opacity=".85"/></g>
+        <path d="M62 97 Q77 82 96 91" stroke="#1c0a1e" stroke-width="4.2" fill="none" stroke-linecap="round"/>
+        <path d="M62 97 L57 93.5" stroke="#1c0a1e" stroke-width="3" stroke-linecap="round"/>
+        ${extra ? `<path d="M64 93 L59 88 M68 89.5 L65 84" stroke="#1c0a1e" stroke-width="2.4" stroke-linecap="round"/>` : ""}
+        <path d="M70 99.5 Q81 102 91 97" stroke="#1c0a1e" stroke-width="1.2" fill="none" opacity=".55"/>
+        <path d="M67 87 Q79 80 93 85" stroke="${skD}" stroke-width="1.4" fill="none" opacity=".8"/>`;
+      return `<defs><radialGradient id="ir${eid}" cx=".5" cy=".72" r=".75"><stop offset="0" stop-color="${shade(ec, 0.55)}"/><stop offset=".55" stop-color="${ec}"/><stop offset="1" stop-color="${shade(ec, -0.65)}"/></radialGradient></defs>
+        ${one}<g transform="translate(200 0) scale(-1 1)">${one}</g>`;
+    };
     const ec = s.eyeC || "#2a1a10", L = "M66 96 Q79 86 93 93 Q81 101 66 96Z", R = "M134 96 Q121 86 107 93 Q119 101 134 96Z";
     const lids = (w = 4) => `<path d="M64 95 Q79 84 94 92 M136 95 Q121 84 106 92" stroke="${INK}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
     const whites = `<path d="${L}" fill="#fff"/><path d="${R}" fill="#fff"/>`;
@@ -139,10 +159,10 @@ const Avatar = (() => {
     switch (s.eyes) {
       case "dots": return `<path d="M68 96 Q80 89 92 94 Q81 99 68 96Z" fill="#fff"/><path d="M132 96 Q120 89 108 94 Q119 99 132 96Z" fill="#fff"/><circle cx="82" cy="95" r="2.8" fill="${INK}"/><circle cx="118" cy="95" r="2.8" fill="${INK}"/><path d="M66 92 L94 95 M134 92 L106 95" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>`;
       case "sleepy": return `${whites}<circle cx="81" cy="96" r="4" fill="${ec}"/><circle cx="119" cy="96" r="4" fill="${ec}"/><path d="M64 93 L94 93 L92 96 L66 96Z M136 93 L106 93 L108 96 L134 96Z" fill="${shade(s.skin, -0.2)}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>`;
-      case "lashes": return `${whites}<circle cx="81" cy="94" r="4.6" fill="${ec}"/><circle cx="119" cy="94" r="4.6" fill="${ec}"/><circle cx="80" cy="92" r="1.5" fill="#fff"/><circle cx="118" cy="92" r="1.5" fill="#fff"/>${lids(4.5)}<path d="M64 95 L59 90 M67 91 L64 86 M136 95 L141 90 M133 91 L136 86" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`;
-      case "sparkle": return `<path d="M66 97 Q66 82 80 82 Q93 82 93 95 Q81 103 66 97Z" fill="${ec}" stroke="${INK}" stroke-width="3"/><path d="M134 97 Q134 82 120 82 Q107 82 107 95 Q119 103 134 97Z" fill="${ec}" stroke="${INK}" stroke-width="3"/><circle cx="84" cy="88" r="3.5" fill="#fff"/><circle cx="124" cy="88" r="3.5" fill="#fff"/><circle cx="74" cy="95" r="1.8" fill="#fff"/><circle cx="114" cy="95" r="1.8" fill="#fff"/>`;
+      case "lashes": return painted(1.18, true);
+      case "sparkle": return painted(1.4);
       case "laser": return `<path d="${L}" fill="none" stroke="#9ff3ff" stroke-width="7" opacity=".5" class="glow"/><path d="${R}" fill="none" stroke="#9ff3ff" stroke-width="7" opacity=".5" class="glow"/><path d="${L}" fill="#fff"/><path d="${R}" fill="#fff"/>${lids(4)}`;
-      default: return `${whites}<circle cx="81" cy="94" r="4.2" fill="${ec}"/><circle cx="119" cy="94" r="4.2" fill="${ec}"/><circle cx="81" cy="94" r="1.8" fill="${INK}"/><circle cx="119" cy="94" r="1.8" fill="${INK}"/><circle cx="79.5" cy="92.5" r="1.2" fill="#fff"/><circle cx="117.5" cy="92.5" r="1.2" fill="#fff"/>${lids()}`;
+      default: return painted(1.18);
     }
   }
   function nose(s, sk) {
@@ -302,47 +322,90 @@ const Avatar = (() => {
       case "bars": return ["#c0c0c0", "#c0c000", "#00c0c0", "#00c000", "#c000c0", "#c00000", "#0000c0"].map((col, i) => `<rect x="${i * 200 / 7}" y="0" width="${200 / 7 + 1}" height="240" fill="${col}"/>`).join("") + `<rect y="180" width="200" height="60" fill="#111"/>`;
       case "static": return `<defs><filter id="ns${id}"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="${id}"/><feColorMatrix values="0 0 0 0 .8  0 0 0 0 .8  0 0 0 0 .8  0 0 0 1.6 -.4"/></filter></defs><rect width="200" height="240" fill="#555"/><rect width="200" height="240" filter="url(#ns${id})" class="noise"/>`;
       case "gold": return `<rect width="200" height="240" fill="#2a1a05"/>${rays(24, "#ffd23f", "#d9a520")}<circle cx="100" cy="110" r="46" fill="#fff6c8" opacity=".5"/>`;
-      default: return `<defs>${dots}</defs><rect width="200" height="240" fill="${c}"/>${rays(18, l, c)}<rect width="200" height="240" fill="url(#hd${id})"/>`;
+      default: return `<defs><radialGradient id="sp${id}" cx="60%" cy="35%" r="80%"><stop offset="0" stop-color="${shade(c, 0.45)}"/><stop offset=".45" stop-color="${shade(c, -0.25)}"/><stop offset="1" stop-color="#140630"/></radialGradient><filter id="bl${id}"><feGaussianBlur stdDeviation="8"/></filter></defs><rect width="200" height="240" fill="url(#sp${id})"/><g filter="url(#bl${id})" opacity=".55"><path d="M-20 70 L220 30 L220 46 L-20 92Z" fill="#ff7ad8"/><path d="M-20 160 L220 110 L220 122 L-20 176Z" fill="#7ae8ff" opacity=".6"/><circle cx="150" cy="60" r="30" fill="#ffd88a"/></g>`;
     }
   }
-  // full avatar. opts: { expr: happy|sad|shock|talk, bg: false to skip the background, cls, anim }
+  // full avatar, painted in a 90s anime select-screen style: gradient fills instead of flat colour,
+  // soft blurred shadows, warm ink lines, a pink/cyan rim light and glossy hair highlights.
+  // opts: { expr: happy|sad|shock|talk, bg: false to skip the background, cls, anim }
   function vsvg(spec, opts = {}) {
     const s = { ...DEFAULT, ...spec }, id = ++uid;
-    const sk = s.skin, skd = shade(sk, -0.14), hc = s.hairC, hs = shade(hc, -0.3), hl = shade(hc, 0.3);
+    const sk = s.skin, hc = s.hairC, hs = shade(hc, -0.3), hl = shade(hc, 0.3);
     const head = HEADS[s.head] || HEADS.round;
-    const bg = opts.bg === false ? "" : `<clipPath id="cp${id}"><rect width="200" height="240" rx="18"/></clipPath><g clip-path="url(#cp${id})">${background(s, id)}</g>`;
-    const defs = `<defs><clipPath id="hc${id}"><path d="${head}"/></clipPath><clipPath id="bd${id}"><path d="M8 240 C10 192 32 164 78 154 L122 154 C168 164 190 192 192 240Z"/></clipPath><pattern id="ht${id}" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.5" cy="2.5" r="1.1" fill="#000" opacity=".45"/></pattern></defs>`;
+    const skL = shade(sk, 0.2), skD = shade(sk, -0.38), skDD = shade(sk, -0.6);
+    const tc = s.topC, t2 = s.top2;
+    const grad = (gid, a, b, c, x2 = 0.7, y2 = 1) => `<linearGradient id="${gid}" x1="0" y1="0" x2="${x2}" y2="${y2}"><stop offset="0" stop-color="${a}"/><stop offset=".45" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></linearGradient>`;
+    // swap flat fills for gradients and soften the ink
+    const paint = (m) => m
+      .split(`fill="${sk}"`).join(`fill="url(#sg${id})"`)
+      .split(`fill="${hc}"`).join(`fill="url(#hg${id})"`)
+      .split(`fill="${tc}"`).join(`fill="url(#tg${id})"`)
+      .split(`fill="${t2}"`).join(`fill="url(#t2${id})"`)
+      .split(`stroke="${INK}" stroke-width="4.5"`).join(`stroke="#1c0a1e" stroke-width="3.4"`)
+      .split(`stroke="${INK}" stroke-width="3"`).join(`stroke="#1c0a1e" stroke-width="2.4"`);
+    const hf = hairFront(s, hc, hs, hl);
+    const bg = opts.bg === false ? "" : `<clipPath id="cp${id}"><rect width="200" height="240" rx="10"/></clipPath><g clip-path="url(#cp${id})">${background(s, id)}</g>`;
+    const defs = `<defs>
+      ${grad(`sg${id}`, skL, sk, skD)}${grad(`hg${id}`, shade(hc, 0.45), hc, shade(hc, -0.5), 0.5)}${grad(`tg${id}`, shade(tc, 0.3), tc, shade(tc, -0.5))}${grad(`t2${id}`, shade(t2, 0.3), t2, shade(t2, -0.45))}
+      <filter id="sb${id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+      <filter id="sf${id}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.6"/></filter>
+      <clipPath id="hc${id}"><path d="${head}"/></clipPath>
+      <clipPath id="bd${id}"><path d="M8 240 C10 192 32 164 78 154 L122 154 C168 164 190 192 192 240Z"/></clipPath>
+      <clipPath id="rr${id}"><rect x="112" y="0" width="90" height="240"/></clipPath>
+      <clipPath id="rl${id}"><rect x="0" y="0" width="72" height="240"/></clipPath>
+      ${s.hair !== "bald" ? `<clipPath id="hf${id}">${hf}</clipPath>` : ""}
+    </defs>`;
     return `<svg class="av ${opts.cls || ""} ${opts.anim === false ? "" : "bob"}" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="avatar">${defs}${bg}
       <g class="body">
-        ${hairBack(s, hc, hs)}
-        <path d="M80 124 L78 164 H122 L120 124Z" fill="${sk}" ${O}/>
-        <path d="M80 124 H120 L120 146 Q100 156 80 144Z" fill="${skd}"/>
-        <path d="M86 144 L96 162 M114 144 L104 162" stroke="${shade(sk, -0.35)}" stroke-width="2" fill="none"/>
-        ${top(s, sk, id)}
-        <g clip-path="url(#bd${id})"><path d="M116 156 C156 166 192 196 192 240 H130 C142 212 138 182 116 156Z" fill="#000" opacity=".26"/><path d="M116 156 C156 166 192 196 192 240 H130 C142 212 138 182 116 156Z" fill="url(#ht${id})"/><path d="M18 236 C20 200 40 176 76 164" stroke="#fff" stroke-width="3" opacity=".35" fill="none"/></g>
-        ${neckwear(s)}
+        ${paint(hairBack(s, hc, hs))}
+        <path d="M80 124 L78 164 H122 L120 124Z" fill="url(#sg${id})" stroke="#1c0a1e" stroke-width="3.4"/>
+        <path d="M78 122 H122 L122 150 Q100 160 78 148Z" fill="${skDD}" opacity=".55" filter="url(#sf${id})"/>
+        <path d="M88 142 L96 162 M112 142 L104 162" stroke="${skD}" stroke-width="2" fill="none" opacity=".7"/>
+        ${paint(top(s, sk, id))}
+        <g clip-path="url(#bd${id})">
+          <path d="M116 156 C156 166 196 196 196 240 H128 C142 212 138 182 116 156Z" fill="#12061e" opacity=".42" filter="url(#sb${id})"/>
+          <path d="M70 158 Q100 176 130 158 L132 172 Q100 188 68 172Z" fill="#12061e" opacity=".35" filter="url(#sb${id})"/>
+          <path d="M168 176 C184 192 192 214 192 240" stroke="#ff7ad8" stroke-width="5" fill="none" opacity=".75" filter="url(#sf${id})"/>
+          <path d="M28 186 C18 202 12 220 10 240" stroke="#7ae8ff" stroke-width="4" fill="none" opacity=".55" filter="url(#sf${id})"/>
+        </g>
+        ${paint(neckwear(s))}
       </g>
-      <g class="headg">
-        <ellipse cx="52" cy="98" rx="9" ry="12" fill="${sk}" ${O}/><ellipse cx="148" cy="98" rx="9" ry="12" fill="${sk}" ${O}/>
+      <g class="headg"><g transform="translate(100 96) scale(.9 1.02) translate(-100 -96)">
+        <ellipse cx="52" cy="98" rx="9" ry="12" fill="url(#sg${id})" stroke="#1c0a1e" stroke-width="3"/><ellipse cx="148" cy="98" rx="9" ry="12" fill="${skD}" stroke="#1c0a1e" stroke-width="3"/>
+        <path d="M51 92 Q55 98 52 105" stroke="${skD}" stroke-width="2" fill="none"/>
         ${earwear(s)}
-        <path d="${head}" fill="${sk}" ${O}/>
-        <g clip-path="url(#hc${id})"><path d="M114 30 C150 46 158 100 140 140 L108 160 L102 152 C126 132 134 104 128 76 C125 58 118 46 104 36Z" fill="${shade(sk, -0.32)}" opacity=".85"/><path d="M114 30 C150 46 158 100 140 140 L108 160 L102 152 C126 132 134 104 128 76 C125 58 118 46 104 36Z" fill="url(#ht${id})"/><path d="M60 64 Q66 50 80 44" stroke="#fff" stroke-width="3" opacity=".35" fill="none"/></g>
-        <path d="M66 110 L74 118 M134 110 L126 118" stroke="${shade(sk, -0.4)}" stroke-width="2" stroke-linecap="round"/>
-        ${s.paint ? `<path d="M66 104 L90 106 L66 110Z M66 113 L88 113 L66 117Z M134 104 L110 106 L134 110Z M134 113 L112 113 L134 117Z" fill="${s.hatC}" stroke="${INK}" stroke-width="1"/>` : ""}
-        ${s.scar ? `<path d="M118 78 L128 108 M117 86 L123 84 M120 95 L126 93 M123 103 L129 101" stroke="#9a3a3a" stroke-width="2.4" stroke-linecap="round"/>` : ""}
-        ${s.blush ? `<ellipse cx="70" cy="116" rx="9" ry="5" fill="#ff7a9a" opacity=".45"/><ellipse cx="130" cy="116" rx="9" ry="5" fill="#ff7a9a" opacity=".45"/>` : ""}
-        ${s.freckles ? [[68, 108], [74, 112], [64, 114], [126, 108], [132, 112], [136, 106]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="${shade(sk, -0.4)}"/>`).join("") : ""}
-        ${beard(s, hc, hs)}
+        <path d="${head}" fill="url(#sg${id})" stroke="#1c0a1e" stroke-width="3.4" stroke-linejoin="round"/>
+        <g clip-path="url(#hc${id})">
+          <path d="M118 30 C152 46 160 100 142 140 L110 162 L104 152 C126 132 134 104 128 76 C125 58 118 46 104 36Z" fill="${skDD}" opacity=".6" filter="url(#sb${id})"/>
+          <rect x="40" y="30" width="120" height="${s.hair === "bald" ? 0 : 34}" fill="${skDD}" opacity=".45" filter="url(#sb${id})"/>
+          <ellipse cx="128" cy="112" rx="10" ry="16" fill="${skDD}" opacity=".35" filter="url(#sb${id})"/>
+          <ellipse cx="100" cy="146" rx="30" ry="8" fill="${skDD}" opacity=".4" filter="url(#sb${id})"/>
+          <ellipse cx="72" cy="100" rx="10" ry="7" fill="#fff" opacity=".18" filter="url(#sb${id})"/>
+          <path d="M100 98 L100 110" stroke="#fff" stroke-width="2.5" opacity=".35" filter="url(#sf${id})"/>
+        </g>
+        <g clip-path="url(#rr${id})"><path d="${head}" fill="none" stroke="#ff7ad8" stroke-width="6" opacity=".7" filter="url(#sf${id})"/></g>
+        <g clip-path="url(#rl${id})"><path d="${head}" fill="none" stroke="#7ae8ff" stroke-width="4" opacity=".4" filter="url(#sf${id})"/></g>
+        <path d="M66 112 L74 120 M134 112 L126 120" stroke="${skD}" stroke-width="1.8" stroke-linecap="round" opacity=".8"/>
+        ${s.paint ? `<path d="M66 104 L90 106 L66 110Z M66 113 L88 113 L66 117Z M134 104 L110 106 L134 110Z M134 113 L112 113 L134 117Z" fill="${s.hatC}" stroke="#1c0a1e" stroke-width="1"/>` : ""}
+        ${s.scar ? `<path d="M118 78 L128 108 M117 86 L123 84 M120 95 L126 93 M123 103 L129 101" stroke="#8a2a3a" stroke-width="2.2" stroke-linecap="round"/>` : ""}
+        ${s.blush ? `<ellipse cx="70" cy="116" rx="9" ry="5" fill="#ff7a9a" opacity=".4" filter="url(#sf${id})"/><ellipse cx="130" cy="116" rx="9" ry="5" fill="#ff7a9a" opacity=".4" filter="url(#sf${id})"/>` : ""}
+        ${s.freckles ? [[68, 108], [74, 112], [64, 114], [126, 108], [132, 112], [136, 106]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.4" fill="${skD}"/>`).join("") : ""}
+        ${paint(beard(s, hc, hs))}
         <g class="eyes">${eyes(s, opts.expr)}</g>
         ${nose(s, sk)}
         <g class="mouth">${mouth(s, opts.expr)}</g>
-        ${hairFront(s, hc, hs, hl)}
-        ${s.hair !== "bald" ? `<path d="M66 54 Q76 42 90 40" stroke="${hl}" stroke-width="3.5" opacity=".8" fill="none" stroke-linecap="round"/>` : ""}
+        ${paint(hf)}
+        ${s.hair !== "bald" ? `<g clip-path="url(#hf${id})">
+          <path d="M58 58 Q80 38 108 42 M70 66 Q92 50 118 54 M120 44 Q138 50 146 66" stroke="${shade(hc, 0.6)}" stroke-width="4" fill="none" opacity=".75" stroke-linecap="round" filter="url(#sf${id})"/>
+          <path d="M62 50 Q74 44 84 48 M96 36 Q108 34 116 40" stroke="#fff" stroke-width="2" fill="none" opacity="${s.tips ? 0.95 : 0.6}" stroke-linecap="round"/>
+          <path d="M84 40 L76 70 M104 38 L100 64 M124 44 L128 72 M140 56 L146 80" stroke="${shade(hc, -0.6)}" stroke-width="1.6" fill="none" opacity=".55"/>
+          <rect x="120" y="0" width="80" height="140" fill="#12061e" opacity=".3" filter="url(#sb${id})"/>
+        </g>` : `<ellipse cx="84" cy="52" rx="14" ry="6" fill="#fff" opacity=".3" filter="url(#sf${id})"/>`}
         ${brows(s, hc)}
-        ${glasses(s)}
-        ${hat(s, hc)}
+        ${paint(glasses(s))}
+        ${paint(hat(s, hc))}
         ${phones(s)}
-      </g>
+      </g></g>
     </svg>`;
   }
 
