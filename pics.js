@@ -10,12 +10,12 @@ const Pics = (() => {
       <circle cx="42" cy="51" r="8" fill="#fff" ${s3}/><circle cx="78" cy="51" r="8" fill="#fff" ${s3}/>
       <rect x="50" y="46" width="20" height="10" fill="#3a2a2a" ${s3}/>
       <path d="M30 92 L36 76 H84 L90 92" fill="#c43a7e" ${S}/>
-      <text x="60" y="35" font-family="Bungee" font-size="7" text-anchor="middle" fill="#111">MIXTAPE</text>`,
+      <text x="60" y="35" font-family="Russo One" font-size="7" text-anchor="middle" fill="#111">MIXTAPE</text>`,
     vhs: `<rect x="8" y="30" width="104" height="60" rx="5" fill="#2b2b33" ${S}/>
       <rect x="20" y="40" width="80" height="22" rx="3" fill="#15151a" ${s3}/>
       <circle cx="40" cy="51" r="7" fill="#eee" ${s3}/><circle cx="80" cy="51" r="7" fill="#eee" ${s3}/>
       <rect x="26" y="68" width="68" height="14" fill="#fff" ${s3}/>
-      <text x="60" y="79" font-family="Permanent Marker" font-size="9" text-anchor="middle" fill="#d02">BE KIND REWIND</text>`,
+      <text x="60" y="79" font-family="Bangers" font-size="9" text-anchor="middle" fill="#d02">BE KIND REWIND</text>`,
     walkman: `<path d="M24 22 Q60 -6 96 22" fill="none" stroke="#111" stroke-width="5"/>
       <rect x="14" y="18" width="16" height="24" rx="7" fill="#ff8a1a" ${S}/><rect x="90" y="18" width="16" height="24" rx="7" fill="#ff8a1a" ${S}/>
       <path d="M22 42 Q20 60 40 66" fill="none" stroke="#111" stroke-width="3"/>
@@ -45,7 +45,7 @@ const Pics = (() => {
       <rect x="34" y="12" width="50" height="32" fill="#c9ced8" ${s3}/><rect x="66" y="18" width="10" height="20" fill="#2c4fd6"/>
       <rect x="26" y="60" width="70" height="46" fill="#f3f0e6" ${s3}/>
       <path d="M34 72 H88 M34 82 H88 M34 92 H74" stroke="#9aa" stroke-width="2"/>
-      <text x="60" y="70" font-family="Permanent Marker" font-size="9" text-anchor="middle" fill="#c22">GAMES!!</text>`,
+      <text x="60" y="70" font-family="Bangers" font-size="9" text-anchor="middle" fill="#c22">GAMES!!</text>`,
     boombox: `<rect x="40" y="10" width="40" height="10" rx="4" fill="none" stroke="#111" stroke-width="5"/>
       <rect x="6" y="20" width="108" height="72" rx="8" fill="#c4c6cc" ${S}/>
       <circle cx="32" cy="58" r="20" fill="#333" ${S}/><circle cx="32" cy="58" r="8" fill="#777"/>

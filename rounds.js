@@ -192,7 +192,11 @@ const Rounds = (() => {
           const said = vj.pick == null ? "ran out of time" : q.type === "year" ? `said ${vj.pick}` : `said ${esc(q.opts[vj.pick])}`;
           b.querySelector("span").textContent = `${vj.name} ${said} ${vj.ok ? "✔" : "✘"}${vj.pick != null ? ` (${(vj.at / 1000).toFixed(1)}s)` : ""}`;
         }
-        if (ok && !opts.quick) FX.confetti(26, host.querySelector(".qcard"));
+        if (!opts.quick) {
+          const words = ok ? ["BAM!", "POW!", "ZAP!", "WHAM!", "KAPOW!", "BOOM!", "SMASH!"] : ["OOF!", "ARGH!", "WHIFF!", "OUCH!", "NOPE!"];
+          const b = document.createElement("div"); b.className = "burst " + (ok ? "ok" : "no");
+          b.innerHTML = `<span>${words[Math.floor(Math.random() * words.length)]}</span>`; card.appendChild(b);
+        }
       }
 
       // ----- inputs -----
@@ -251,7 +255,7 @@ const Rounds = (() => {
   function ident(host, type, extra = "") {
     const T = TYPES[type];
     return new Promise((resolve) => {
-      host.innerHTML = `<div class="ident t-${type}"><div class="ich">CH<b>${String(T.ch).padStart(2, "0")}</b></div><div class="iicon">${T.icon}</div><h2 class="iname" data-text="${esc(T.name)}">${esc(T.name)}</h2><p>${esc(T.blurb)}</p>${extra}<button class="go big" id="iplay">▶ PLAY</button></div>`;
+      host.innerHTML = `<div class="ident t-${type}"><div class="ich">CH<b>${String(T.ch).padStart(2, "0")}</b></div><div class="iicon">${T.icon}</div><h2 class="iname" data-text="${esc(T.name)}">${esc(T.name)}</h2><p>${esc(T.blurb)}</p>${extra}<button class="go big" id="iplay">▶ START</button></div>`;
       document.getElementById("osd-r").textContent = "CH " + String(T.ch).padStart(2, "0");
       host.querySelector("#iplay").onclick = () => { Sound.play("click"); resolve(); };
     });

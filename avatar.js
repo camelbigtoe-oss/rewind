@@ -1,11 +1,12 @@
-// Cartoon avatars. A spec (skin, hair, clothes...) is drawn as a thick-outline SVG bust in a
+// Comic-book fighter avatars, cel-shaded with halftone shadows. A spec (skin, hair, clothes...) is drawn as a thick-outline SVG bust in a
 // 200x240 box. The same renderer draws the player, party guests and the rival VJs.
 // CATALOG lists every option; an option with lv / ach / vj / caps is locked until earned (see RPG.unlocked).
 const Avatar = (() => {
   "use strict";
   let uid = 0;
-  const O = 'stroke="#111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"';
-  const O3 = 'stroke="#111" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
+  const INK = "#0b0b14";
+  const O = 'stroke="#0b0b14" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"';
+  const O3 = 'stroke="#0b0b14" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
   function shade(hex, amt) {
     const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
     const f = (c) => Math.max(0, Math.min(255, Math.round(amt < 0 ? c * (1 + amt) : c + (255 - c) * amt)));
@@ -31,9 +32,9 @@ const Avatar = (() => {
     { c: "#ff3fa4", name: "Hot pink", lv: 4 }, { c: "#2fb7ff", name: "Electric blue", lv: 7 }, { c: "#8a4dff", name: "Grape", lv: 11 },
     { c: "#29d36b", name: "Slime green", lv: 16 }, { c: "#ff7b1a", name: "Neon orange", lv: 22 },
   ];
-  const COLORS = ["#ff3f8e", "#ffe14d", "#2fd8ff", "#7b3cff", "#1ee3a1", "#ff7a1a", "#e8473a", "#2f4fd6", "#1d1d26", "#f4f1ea", "#7a8a3a", "#8a5a33", "#c4c6cc", "#ff9be0", "#0f8a8a", "#5a2a7a"];
+  const COLORS = ["#e8202a", "#ffd21f", "#1f5fe0", "#0c1a3a", "#f4f1ea", "#1d1d26", "#ff7a1a", "#1ec46a", "#7b3cff", "#2fd8ff", "#ff3f8e", "#8a5a33", "#c4c6cc", "#6a7a3a", "#0f8a8a", "#8a1f2a"];
   const CATALOG = {
-    head: [{ id: "round", name: "Round" }, { id: "oval", name: "Oval" }, { id: "square", name: "Square" }, { id: "heart", name: "Pointy" }, { id: "wide", name: "Wide jaw" }],
+    head: [{ id: "round", name: "Classic" }, { id: "oval", name: "Lean" }, { id: "square", name: "Hero jaw" }, { id: "heart", name: "Sharp" }, { id: "wide", name: "Brawler" }],
     hair: [
       { id: "bald", name: "Bald" }, { id: "buzz", name: "Buzz cut" }, { id: "curtains", name: "Curtains" }, { id: "spikes", name: "Gelled spikes" },
       { id: "hightop", name: "High-top fade" }, { id: "mullet", name: "Mullet" }, { id: "bowl", name: "Bowl cut" }, { id: "grunge", name: "Grunge" },
@@ -42,42 +43,45 @@ const Avatar = (() => {
       { id: "mohawk", name: "Mohawk", lv: 9 }, { id: "perm", name: "Big perm", lv: 13 }, { id: "flattop", name: "Flat top", lv: 18 },
     ],
     brows: [{ id: "normal", name: "Normal" }, { id: "thick", name: "Thick" }, { id: "thin", name: "Thin" }, { id: "angry", name: "Fierce" }, { id: "raised", name: "Raised" }, { id: "uni", name: "Unibrow", lv: 5 }],
-    eyes: [{ id: "dots", name: "Dots" }, { id: "big", name: "Big" }, { id: "sleepy", name: "Sleepy" }, { id: "lashes", name: "Lashes" }, { id: "happy", name: "Happy" }, { id: "sparkle", name: "Sparkle", lv: 8 }, { id: "laser", name: "Laser", ach: "perfect" }],
+    eyes: [{ id: "big", name: "Hero" }, { id: "dots", name: "Intense" }, { id: "sleepy", name: "Cool" }, { id: "lashes", name: "Lashes" }, { id: "happy", name: "Happy" }, { id: "sparkle", name: "Anime", lv: 8 }, { id: "laser", name: "Glowing", ach: "perfect" }],
     eyeC: ["#2a1a10", "#3d6bd6", "#2f8a4a", "#7a4a1f", "#6d6d7a", "#9b3bd6"],
     nose: [{ id: "button", name: "Button" }, { id: "pointy", name: "Pointy" }, { id: "big", name: "Big" }, { id: "line", name: "Line" }, { id: "wide", name: "Wide" }],
-    mouth: [{ id: "smile", name: "Smile" }, { id: "grin", name: "Grin" }, { id: "smirk", name: "Smirk" }, { id: "laugh", name: "Laugh" }, { id: "braces", name: "Braces" }, { id: "tongue", name: "Tongue out" }, { id: "flat", name: "Unimpressed" }, { id: "gold", name: "Gold tooth", lv: 12 }],
+    mouth: [{ id: "smile", name: "Smile" }, { id: "grin", name: "Grin" }, { id: "smirk", name: "Smirk" }, { id: "laugh", name: "Laugh" }, { id: "braces", name: "Braces" }, { id: "tongue", name: "Tongue out" }, { id: "flat", name: "Stern" }, { id: "snarl", name: "Snarl" }, { id: "gold", name: "Gold tooth", lv: 12 }],
     beard: [{ id: "none", name: "None" }, { id: "stubble", name: "Stubble" }, { id: "goatee", name: "Goatee" }, { id: "soul", name: "Soul patch" }, { id: "tache", name: "Moustache" }, { id: "full", name: "Full beard" }, { id: "chin", name: "Chinstrap" }, { id: "chops", name: "Mutton chops", lv: 10 }],
-    glasses: [{ id: "none", name: "None" }, { id: "round", name: "Round wire" }, { id: "tiny", name: "Tiny shades" }, { id: "nerd", name: "Big frames" }, { id: "wrap", name: "Wraparounds", lv: 2 }, { id: "3d", name: "3D specs", lv: 6 }, { id: "heart", name: "Heart shades", lv: 14 }, { id: "star", name: "Star shades", ach: "diamond" }],
-    hat: [{ id: "none", name: "None" }, { id: "backcap", name: "Backwards cap" }, { id: "cap", name: "Cap" }, { id: "bucket", name: "Bucket hat" }, { id: "beanie", name: "Beanie" }, { id: "bandana", name: "Bandana" }, { id: "sweatband", name: "Sweatband" }, { id: "propeller", name: "Propeller cap", lv: 15 }, { id: "crown", name: "Ratings crown", ach: "champion" }],
+    glasses: [{ id: "none", name: "None" }, { id: "round", name: "Round wire" }, { id: "tiny", name: "Tiny shades" }, { id: "nerd", name: "Big frames" }, { id: "wrap", name: "Wraparounds", lv: 2 }, { id: "3d", name: "3D specs", lv: 6 }, { id: "heart", name: "Heart shades", lv: 14 }, { id: "visor", name: "Cyber visor", lv: 4 }, { id: "star", name: "Star shades", ach: "diamond" }],
+    hat: [{ id: "none", name: "None" }, { id: "headband", name: "Fighter headband" }, { id: "backcap", name: "Backwards cap" }, { id: "cap", name: "Cap" }, { id: "bucket", name: "Bucket hat" }, { id: "beanie", name: "Beanie" }, { id: "bandana", name: "Bandana" }, { id: "sweatband", name: "Sweatband" }, { id: "propeller", name: "Propeller cap", lv: 15 }, { id: "crown", name: "Ratings crown", ach: "champion" }],
     top: [
+      { id: "gi", name: "Fighter gi" }, { id: "suit", name: "Hero suit" }, { id: "trench", name: "Trench coat" }, { id: "bomber", name: "Bomber jacket" },
+      { id: "camo", name: "Combat vest", lv: 2 }, { id: "armor", name: "Battle armour", lv: 20 },
       { id: "tee", name: "Baggy tee" }, { id: "flannel", name: "Flannel" }, { id: "windbreaker", name: "Windbreaker" }, { id: "overalls", name: "Overalls" },
       { id: "hoodie", name: "Hoodie" }, { id: "tank", name: "Tank top" }, { id: "turtle", name: "Turtleneck" }, { id: "denim", name: "Denim jacket" },
       { id: "tiedye", name: "Tie-dye", lv: 3 }, { id: "varsity", name: "Varsity jacket", lv: 5 }, { id: "hawaii", name: "Hawaiian shirt", lv: 7 },
       { id: "jersey", name: "B-ball jersey", lv: 10 }, { id: "puffer", name: "Puffer jacket", lv: 13 }, { id: "leather", name: "Leather jacket", lv: 17 },
       { id: "sequin", name: "Sequin jacket", ach: "rave" }, { id: "tux", name: "Awards tux", vj: "exec" },
     ],
-    graphic: [{ id: "none", name: "Plain" }, { id: "smiley", name: "Smiley" }, { id: "bolt", name: "Lightning" }, { id: "yinyang", name: "Yin-yang" }, { id: "alien", name: "Alien" }, { id: "star", name: "Star" }, { id: "rad", name: "RAD" }, { id: "tape", name: "Tape", lv: 4 }, { id: "rewind", name: "REWIND", ach: "first" }],
+    graphic: [{ id: "none", name: "Plain" }, { id: "smiley", name: "Smiley" }, { id: "bolt", name: "Lightning" }, { id: "yinyang", name: "Yin-yang" }, { id: "alien", name: "Alien" }, { id: "star", name: "Star" }, { id: "rad", name: "RAD" }, { id: "emblem", name: "Hero emblem" }, { id: "fist", name: "Fist" }, { id: "tape", name: "Tape", lv: 4 }, { id: "rewind", name: "REWIND", ach: "first" }],
     neck: [{ id: "none", name: "None" }, { id: "choker", name: "Choker" }, { id: "chain", name: "Gold chain" }, { id: "puka", name: "Puka shells" }, { id: "kerchief", name: "Neck bandana", lv: 6 }],
     ears: [{ id: "none", name: "None" }, { id: "stud", name: "Studs" }, { id: "hoops", name: "Hoops" }, { id: "cross", name: "Dangly cross", lv: 8 }],
     phones: [{ id: "none", name: "None" }, { id: "foam", name: "Foam headphones", lv: 2 }, { id: "big", name: "DJ cans", vj: "spinz" }],
     bg: [
-      { id: "memphis", name: "Memphis" }, { id: "checker", name: "Checkerboard" }, { id: "zigzag", name: "Zigzag" }, { id: "stars", name: "Starfield", lv: 3 },
-      { id: "grid", name: "Laser grid", lv: 6 }, { id: "bars", name: "Colour bars", lv: 9 }, { id: "static", name: "Static", lv: 12 }, { id: "gold", name: "Gold record", ach: "platinum" },
+      { id: "memphis", name: "Comic burst" }, { id: "checker", name: "Halftone" }, { id: "zigzag", name: "Lightning" }, { id: "stars", name: "Night city" },
+      { id: "speed", name: "Speed lines", lv: 3 }, { id: "grid", name: "Neon grid", lv: 6 }, { id: "flames", name: "Flames", lv: 9 }, { id: "bars", name: "Colour bars", lv: 11 },
+      { id: "static", name: "Static", lv: 13 }, { id: "gold", name: "Gold champion", ach: "platinum" },
     ],
   };
   const DEFAULT = {
     skin: "#eab58f", head: "round", hair: "curtains", hairC: "#3b2416", tips: false, brows: "normal", eyes: "big", eyeC: "#2a1a10",
-    nose: "button", mouth: "grin", beard: "none", glasses: "none", hat: "none", hatC: "#ff3f8e", top: "flannel", topC: "#e8473a", top2: "#1d1d26",
-    graphic: "smiley", neck: "none", ears: "none", phones: "none", freckles: false, blush: false, bg: "memphis", bgC: "#2fd8ff",
+    nose: "button", mouth: "grin", beard: "none", glasses: "none", hat: "none", hatC: "#ff3f8e", top: "bomber", topC: "#1f5fe0", top2: "#ffd21f",
+    graphic: "emblem", neck: "none", ears: "none", phones: "none", freckles: false, blush: false, scar: false, paint: false, bg: "memphis", bgC: "#1f5fe0",
   };
 
   // ---------- drawing ----------
   const HEADS = {
-    round: `M100 40 C134 40 148 64 148 92 C148 124 128 142 100 142 C72 142 52 124 52 92 C52 64 66 40 100 40Z`,
-    oval: `M100 40 C128 40 142 62 142 92 C142 124 124 144 100 144 C76 144 58 124 58 92 C58 62 72 40 100 40Z`,
-    square: `M76 40 H124 Q146 40 146 64 V118 Q146 142 120 142 H80 Q54 142 54 118 V64 Q54 40 76 40Z`,
-    heart: `M100 40 C140 40 150 70 146 100 C142 126 118 146 100 146 C82 146 58 126 54 100 C50 70 60 40 100 40Z`,
-    wide: `M100 40 C140 40 148 68 150 96 C152 128 130 142 100 142 C70 142 48 128 50 96 C52 68 60 40 100 40Z`,
+    round: `M100 38 C134 38 147 60 147 88 C147 110 140 124 128 134 L110 145 Q100 150 90 145 L72 134 C60 124 53 110 53 88 C53 60 66 38 100 38Z`,
+    oval: `M100 38 C130 38 142 60 142 90 C142 114 132 130 118 140 L106 148 Q100 151 94 148 L82 140 C68 130 58 114 58 90 C58 60 70 38 100 38Z`,
+    square: `M74 38 H126 Q148 42 148 68 V104 Q148 124 134 134 L114 146 H86 L66 134 Q52 124 52 104 V68 Q52 42 74 38Z`,
+    heart: `M100 38 C140 38 150 66 146 96 C142 118 126 134 112 144 L100 152 L88 144 C74 134 58 118 54 96 C50 66 60 38 100 38Z`,
+    wide: `M100 38 C138 38 150 62 150 92 C150 116 144 128 132 136 L112 146 H88 L68 136 C56 128 50 116 50 92 C50 62 62 38 100 38Z`,
   };
 
   function hairBack(s, hc, hs) {
@@ -117,55 +121,60 @@ const Avatar = (() => {
     }
   }
   function brows(s, hc) {
-    const c = shade(hc, -0.2), w = s.brows === "thick" ? 7 : s.brows === "thin" ? 3 : 5;
+    const c = shade(hc, -0.35);
+    const w = s.brows === "thick" ? 7.5 : s.brows === "thin" ? 3.5 : 5.5;
     switch (s.brows) {
-      case "angry": return `<path d="M68 80 L92 88 M132 80 L108 88" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`;
-      case "raised": return `<path d="M68 78 Q80 68 92 76 M108 76 Q120 68 132 78" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
-      case "uni": return `<path d="M66 82 Q80 74 100 82 Q120 74 134 82" stroke="${c}" stroke-width="7" fill="none" stroke-linecap="round"/>`;
-      default: return `<path d="M68 82 Q80 76 92 82 M108 82 Q120 76 132 82" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
+      case "angry": return `<path d="M64 80 L92 90 L90 84Z M136 80 L108 90 L110 84Z" fill="${c}" stroke="${c}" stroke-width="5" stroke-linejoin="round"/>`;
+      case "raised": return `<path d="M66 82 Q78 70 92 80 M108 80 Q122 70 134 82" stroke="${c}" stroke-width="5.5" fill="none" stroke-linecap="round"/>`;
+      case "uni": return `<path d="M64 84 L90 82 L100 86 L110 82 L136 84" stroke="${c}" stroke-width="7" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`;
+      default: return `<path d="M64 84 L80 80 L93 86 M136 84 L120 80 L107 86" stroke="${c}" stroke-width="${w}" fill="none" stroke-linejoin="round" stroke-linecap="round"/>`;
     }
   }
   function eyes(s, expr) {
-    const ec = s.eyeC || "#2a1a10";
-    if (expr === "happy" || s.eyes === "happy") return `<path d="M72 98 Q80 88 88 98 M112 98 Q120 88 128 98" stroke="#111" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-    if (expr === "shock") return `<g><circle cx="80" cy="96" r="11" fill="#fff" ${O3}/><circle cx="120" cy="96" r="11" fill="#fff" ${O3}/><circle cx="80" cy="96" r="3" fill="#111"/><circle cx="120" cy="96" r="3" fill="#111"/></g>`;
+    const ec = s.eyeC || "#2a1a10", L = "M66 96 Q79 86 93 93 Q81 101 66 96Z", R = "M134 96 Q121 86 107 93 Q119 101 134 96Z";
+    const lids = (w = 4) => `<path d="M64 95 Q79 84 94 92 M136 95 Q121 84 106 92" stroke="${INK}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
+    const whites = `<path d="${L}" fill="#fff"/><path d="${R}" fill="#fff"/>`;
+    if (expr === "happy" || s.eyes === "happy") return `<path d="M66 97 Q79 86 92 96 M108 96 Q121 86 134 97" stroke="${INK}" stroke-width="4.5" fill="none" stroke-linecap="round"/>`;
+    if (expr === "shock") return `${whites}<circle cx="80" cy="94" r="2.6" fill="${INK}"/><circle cx="120" cy="94" r="2.6" fill="${INK}"/>${lids(3)}`;
     switch (s.eyes) {
-      case "dots": return `<ellipse cx="80" cy="96" rx="4.5" ry="6" fill="#111"/><ellipse cx="120" cy="96" rx="4.5" ry="6" fill="#111"/>`;
-      case "sleepy": return `<ellipse cx="80" cy="97" rx="9" ry="7" fill="#fff" ${O3}/><ellipse cx="120" cy="97" rx="9" ry="7" fill="#fff" ${O3}/><circle cx="80" cy="99" r="4" fill="${ec}"/><circle cx="120" cy="99" r="4" fill="${ec}"/><path d="M70 96 H90 M110 96 H130" stroke="#111" stroke-width="4"/><path d="M71 93 Q80 88 89 93Z M111 93 Q120 88 129 93Z" fill="${shade(s.skin, -0.15)}"/>`;
-      case "lashes": return `<ellipse cx="80" cy="96" rx="9" ry="10" fill="#fff" ${O3}/><ellipse cx="120" cy="96" rx="9" ry="10" fill="#fff" ${O3}/><circle cx="81" cy="98" r="5" fill="${ec}"/><circle cx="121" cy="98" r="5" fill="${ec}"/><circle cx="83" cy="96" r="1.8" fill="#fff"/><circle cx="123" cy="96" r="1.8" fill="#fff"/><path d="M70 88 L66 84 M74 86 L72 81 M130 88 L134 84 M126 86 L128 81" stroke="#111" stroke-width="3" stroke-linecap="round"/>`;
-      case "sparkle": return `<ellipse cx="80" cy="96" rx="10" ry="11" fill="${ec}" ${O3}/><ellipse cx="120" cy="96" rx="10" ry="11" fill="${ec}" ${O3}/><circle cx="84" cy="92" r="3.5" fill="#fff"/><circle cx="124" cy="92" r="3.5" fill="#fff"/><circle cx="77" cy="100" r="2" fill="#fff"/><circle cx="117" cy="100" r="2" fill="#fff"/>`;
-      case "laser": return `<ellipse cx="80" cy="96" rx="10" ry="8" fill="#ff2e2e" ${O3}/><ellipse cx="120" cy="96" rx="10" ry="8" fill="#ff2e2e" ${O3}/><circle cx="80" cy="96" r="3" fill="#fff"/><circle cx="120" cy="96" r="3" fill="#fff"/><path d="M90 96 L200 70 M130 96 L200 110" stroke="#ff2e2e" stroke-width="2.5" opacity=".7" class="laser"/>`;
-      default: return `<ellipse cx="80" cy="96" rx="8" ry="10" fill="#fff" ${O3}/><ellipse cx="120" cy="96" rx="8" ry="10" fill="#fff" ${O3}/><circle cx="81" cy="98" r="4.5" fill="${ec}"/><circle cx="121" cy="98" r="4.5" fill="${ec}"/><circle cx="82.5" cy="96" r="1.6" fill="#fff"/><circle cx="122.5" cy="96" r="1.6" fill="#fff"/>`;
+      case "dots": return `<path d="M68 96 Q80 89 92 94 Q81 99 68 96Z" fill="#fff"/><path d="M132 96 Q120 89 108 94 Q119 99 132 96Z" fill="#fff"/><circle cx="82" cy="95" r="2.8" fill="${INK}"/><circle cx="118" cy="95" r="2.8" fill="${INK}"/><path d="M66 92 L94 95 M134 92 L106 95" stroke="${INK}" stroke-width="4.5" stroke-linecap="round"/>`;
+      case "sleepy": return `${whites}<circle cx="81" cy="96" r="4" fill="${ec}"/><circle cx="119" cy="96" r="4" fill="${ec}"/><path d="M64 93 L94 93 L92 96 L66 96Z M136 93 L106 93 L108 96 L134 96Z" fill="${shade(s.skin, -0.2)}" stroke="${INK}" stroke-width="3.5" stroke-linejoin="round"/>`;
+      case "lashes": return `${whites}<circle cx="81" cy="94" r="4.6" fill="${ec}"/><circle cx="119" cy="94" r="4.6" fill="${ec}"/><circle cx="80" cy="92" r="1.5" fill="#fff"/><circle cx="118" cy="92" r="1.5" fill="#fff"/>${lids(4.5)}<path d="M64 95 L59 90 M67 91 L64 86 M136 95 L141 90 M133 91 L136 86" stroke="${INK}" stroke-width="3" stroke-linecap="round"/>`;
+      case "sparkle": return `<path d="M66 97 Q66 82 80 82 Q93 82 93 95 Q81 103 66 97Z" fill="${ec}" stroke="${INK}" stroke-width="3"/><path d="M134 97 Q134 82 120 82 Q107 82 107 95 Q119 103 134 97Z" fill="${ec}" stroke="${INK}" stroke-width="3"/><circle cx="84" cy="88" r="3.5" fill="#fff"/><circle cx="124" cy="88" r="3.5" fill="#fff"/><circle cx="74" cy="95" r="1.8" fill="#fff"/><circle cx="114" cy="95" r="1.8" fill="#fff"/>`;
+      case "laser": return `<path d="${L}" fill="none" stroke="#9ff3ff" stroke-width="7" opacity=".5" class="glow"/><path d="${R}" fill="none" stroke="#9ff3ff" stroke-width="7" opacity=".5" class="glow"/><path d="${L}" fill="#fff"/><path d="${R}" fill="#fff"/>${lids(4)}`;
+      default: return `${whites}<circle cx="81" cy="94" r="4.2" fill="${ec}"/><circle cx="119" cy="94" r="4.2" fill="${ec}"/><circle cx="81" cy="94" r="1.8" fill="${INK}"/><circle cx="119" cy="94" r="1.8" fill="${INK}"/><circle cx="79.5" cy="92.5" r="1.2" fill="#fff"/><circle cx="117.5" cy="92.5" r="1.2" fill="#fff"/>${lids()}`;
     }
   }
   function nose(s, sk) {
-    const d = shade(sk, -0.22);
+    const d = shade(sk, -0.3);
     switch (s.nose) {
-      case "pointy": return `<path d="M100 98 L110 116 L98 118" fill="none" stroke="${d}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-      case "big": return `<ellipse cx="100" cy="112" rx="11" ry="9" fill="${shade(sk, -0.06)}" ${O3}/>`;
-      case "line": return `<path d="M98 102 Q96 112 102 114" fill="none" stroke="${d}" stroke-width="3" stroke-linecap="round"/>`;
-      case "wide": return `<path d="M90 112 Q94 118 100 116 Q106 118 110 112" fill="none" stroke="${d}" stroke-width="3.5" stroke-linecap="round"/><path d="M96 100 Q94 108 92 110" stroke="${d}" stroke-width="2.5" fill="none"/>`;
-      default: return `<ellipse cx="100" cy="111" rx="6" ry="5" fill="${d}"/>`;
+      case "pointy": return `<path d="M102 96 L110 116 L99 118" fill="none" stroke="${INK}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><path d="M104 104 L109 115 L103 116Z" fill="${d}"/>`;
+      case "big": return `<path d="M98 98 L94 114 Q100 120 110 115 L106 100" fill="${d}" opacity=".5"/><path d="M92 113 Q100 121 110 114" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`;
+      case "line": return `<path d="M102 98 L104 113 L99 115" fill="none" stroke="${INK}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+      case "wide": return `<path d="M90 112 Q94 118 100 116 Q106 118 110 112" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/><path d="M104 98 L108 112" stroke="${d}" stroke-width="4" stroke-linecap="round"/>`;
+      default: return `<path d="M104 98 L108 113 L100 115" fill="none" stroke="${INK}" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M104 100 L107 112 L102 113Z" fill="${d}"/>`;
     }
   }
   function mouth(s, expr) {
     let m = s.mouth;
-    if (expr === "happy") m = m === "braces" || m === "gold" ? m : "laugh";
+    if (expr === "happy") m = m === "braces" || m === "gold" ? m : "grin";
     if (expr === "sad") m = "frown";
     if (expr === "shock") m = "o";
     if (expr === "talk") m = "talk";
+    const lip = `<path d="M92 133 Q100 136 108 133" stroke="${INK}" stroke-width="1.8" opacity=".5" fill="none"/>`;
     switch (m) {
-      case "grin": return `<path d="M82 124 Q100 140 118 124 Z" fill="#fff" ${O3}/><path d="M86 126 H114" stroke="#111" stroke-width="1.5"/>`;
-      case "smirk": return `<path d="M86 128 Q104 134 118 122" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>`;
-      case "laugh": return `<path d="M80 122 Q100 148 120 122 Z" fill="#6b1a2a" ${O3}/><path d="M88 138 Q100 132 112 138 Q100 146 88 138Z" fill="#ff7a8a"/><path d="M82 124 H118" stroke="#fff" stroke-width="4"/>`;
-      case "braces": return `<path d="M80 122 Q100 144 120 122 Z" fill="#fff" ${O3}/><path d="M84 128 H116" stroke="#9aa4b0" stroke-width="3"/>${[88, 96, 104, 112].map((x) => `<rect x="${x - 2}" y="126" width="4" height="4" fill="#c7d0dc" stroke="#555" stroke-width="1"/>`).join("")}`;
-      case "gold": return `<path d="M82 124 Q100 140 118 124 Z" fill="#fff" ${O3}/><rect x="103" y="125" width="6" height="6" fill="#ffd23f" stroke="#111" stroke-width="1.2"/>`;
-      case "tongue": return `<path d="M84 124 Q100 136 116 124" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/><path d="M98 128 Q98 142 106 142 Q114 142 112 128" fill="#ff6f8a" ${O3}/>`;
-      case "flat": return `<path d="M88 128 H112" stroke="#111" stroke-width="4" stroke-linecap="round"/>`;
-      case "frown": return `<path d="M86 132 Q100 120 114 132" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>`;
-      case "o": return `<ellipse cx="100" cy="130" rx="8" ry="10" fill="#6b1a2a" ${O3}/>`;
-      case "talk": return `<ellipse cx="100" cy="128" rx="12" ry="7" fill="#6b1a2a" ${O3}/><path d="M92 126 H108" stroke="#fff" stroke-width="3"/>`;
-      default: return `<path d="M84 124 Q100 138 116 124" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>`;
+      case "grin": return `<path d="M82 124 Q100 138 118 123 Q114 132 100 134 Q86 133 82 124Z" fill="#fff" ${O3}/><path d="M85 126 Q100 130 116 125 M93 126 V132 M100 127 V134 M107 126 V132" stroke="${INK}" stroke-width="1.4" fill="none"/>`;
+      case "smirk": return `<path d="M86 128 Q102 132 118 121" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/><path d="M116 120 L120 124" stroke="${INK}" stroke-width="2.5" stroke-linecap="round"/>${lip}`;
+      case "laugh": return `<path d="M80 122 Q100 148 120 122 Z" fill="#5a1020" ${O3}/><path d="M84 123 H116 L114 128 H86Z" fill="#fff"/><path d="M90 140 Q100 134 110 140 Q100 145 90 140Z" fill="#e85a6a"/>`;
+      case "braces": return `<path d="M82 124 Q100 140 118 124 Z" fill="#fff" ${O3}/><path d="M85 128 H115" stroke="#8a96a4" stroke-width="2.5"/>${[89, 96, 104, 111].map((x) => `<rect x="${x - 2}" y="126.5" width="4" height="3.5" fill="#d0d8e2" stroke="#444" stroke-width="1"/>`).join("")}`;
+      case "gold": return `<path d="M82 124 Q100 138 118 123 Q114 132 100 134 Q86 133 82 124Z" fill="#fff" ${O3}/><rect x="103" y="125.5" width="6" height="6" fill="#ffd23f" stroke="${INK}" stroke-width="1.2"/>`;
+      case "snarl": return `<path d="M82 126 L88 122 H112 L118 126 L112 132 H88Z" fill="#fff" ${O3}/><path d="M84 127 H116 M90 122 V132 M96 122 V132 M104 122 V132 M110 122 V132" stroke="${INK}" stroke-width="1.4"/>`;
+      case "tongue": return `<path d="M84 124 Q100 134 116 124" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/><path d="M98 128 Q98 141 106 141 Q114 141 112 128" fill="#e85a6a" ${O3}/>`;
+      case "flat": return `<path d="M86 127 L114 125" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>${lip}`;
+      case "frown": return `<path d="M86 131 Q100 121 114 131" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`;
+      case "o": return `<ellipse cx="100" cy="130" rx="7" ry="9" fill="#5a1020" ${O3}/>`;
+      case "talk": return `<path d="M86 124 H114 Q112 135 100 135 Q88 135 86 124Z" fill="#5a1020" ${O3}/><path d="M88 125 H112" stroke="#fff" stroke-width="2.5"/>`;
+      default: return `<path d="M84 125 Q100 133 116 124" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>${lip}`;
     }
   }
   function beard(s, hc, hs) {
@@ -188,6 +197,7 @@ const Avatar = (() => {
       case "wrap": return `<path d="M56 90 Q100 78 144 90 L140 104 Q120 112 100 104 Q80 112 60 104Z" fill="${s.hatC}" ${O3}/><path d="M64 92 Q100 82 136 92" stroke="#fff" stroke-width="3" opacity=".6" fill="none"/>`;
       case "3d": return `<rect x="62" y="84" width="76" height="24" rx="3" fill="#f4f4f4" ${O3}/><rect x="68" y="88" width="26" height="16" fill="#ff2e4e" opacity=".85"/><rect x="106" y="88" width="26" height="16" fill="#2ec9ff" opacity=".85"/>`;
       case "heart": return [80, 120].map((x) => `<path d="M${x} 108 L${x - 14} 94 Q${x - 16} 82 ${x - 6} 84 Q${x} 86 ${x} 90 Q${x} 86 ${x + 6} 84 Q${x + 16} 82 ${x + 14} 94Z" fill="#ff3f8e" ${O3}/>`).join("") + `<path d="M93 92 H107" stroke="#111" stroke-width="3"/>`;
+      case "visor": return `<path d="M54 86 Q100 78 146 86 L144 102 Q100 96 56 102Z" fill="none" stroke="#9ff3ff" stroke-width="8" opacity=".35" class="glow"/><path d="M54 86 Q100 78 146 86 L144 102 Q100 96 56 102Z" fill="#2fe8ff" opacity=".9" ${O3}/><path d="M60 90 Q100 83 140 90" stroke="#fff" stroke-width="3" opacity=".8" fill="none"/>`;
       case "star": return [80, 120].map((x) => `<path d="M${x} 80 L${x + 5} 91 L${x + 16} 92 L${x + 8} 100 L${x + 10} 111 L${x} 105 L${x - 10} 111 L${x - 8} 100 L${x - 16} 92 L${x - 5} 91Z" fill="#ffe14d" ${O3}/>`).join("") + `<path d="M94 94 H106" stroke="#111" stroke-width="3"/>`;
       default: return "";
     }
@@ -195,6 +205,7 @@ const Avatar = (() => {
   function hat(s, hc) {
     const c = s.hatC, d = shade(c, -0.25);
     switch (s.hat) {
+      case "headband": return `<path d="M150 72 Q172 74 190 92 L182 98 Q168 84 150 80Z M150 78 Q170 92 178 116 L168 116 Q162 96 148 82Z" fill="${c}" ${O3}/><path d="M50 70 Q100 56 150 70 L150 82 Q100 70 50 82Z" fill="${c}" ${O3}/><path d="M54 74 Q100 62 146 74" stroke="${shade(c, 0.4)}" stroke-width="2.5" fill="none"/>`;
       case "backcap": return `<path d="M50 78 C48 30 72 18 100 18 C128 18 152 30 150 78 Z" fill="${c}" ${O}/><path d="M50 78 H150" stroke="#111" stroke-width="4"/><path d="M84 78 Q100 58 116 78Z" fill="${hc}" ${O3}/><path d="M86 70 H114" stroke="${d}" stroke-width="3"/><circle cx="100" cy="20" r="4" fill="${d}" ${O3}/>`;
       case "cap": return `<path d="M52 74 C50 30 72 18 100 18 C128 18 150 30 148 74 Z" fill="${c}" ${O}/><path d="M42 78 Q100 60 158 78 Q160 92 100 90 Q40 92 42 78Z" fill="${d}" ${O}/><circle cx="100" cy="20" r="4" fill="${d}" ${O3}/><path d="M100 22 V72" stroke="${d}" stroke-width="2"/>`;
       case "bucket": return `<path d="M58 66 C58 28 78 18 100 18 C122 18 142 28 142 66Z" fill="${c}" ${O}/><path d="M32 82 Q100 52 168 82 Q100 70 32 82Z" fill="${d}" ${O}/><path d="M60 60 H140" stroke="${d}" stroke-width="3"/>`;
@@ -214,16 +225,24 @@ const Avatar = (() => {
       case "yinyang": return `<circle cx="${x}" cy="${y}" r="16" fill="#fff" ${O3}/><path d="M${x} ${y - 16} A16 16 0 0 1 ${x} ${y + 16} A8 8 0 0 1 ${x} ${y} A8 8 0 0 0 ${x} ${y - 16}Z" fill="#111"/><circle cx="${x}" cy="${y - 8}" r="2.5" fill="#fff"/><circle cx="${x}" cy="${y + 8}" r="2.5" fill="#111"/>`;
       case "alien": return `<path d="M${x} ${y - 18} C${x + 18} ${y - 18} ${x + 18} ${y + 4} ${x} ${y + 18} C${x - 18} ${y + 4} ${x - 18} ${y - 18} ${x} ${y - 18}Z" fill="#7dff6b" ${O3}/><path d="M${x - 11} ${y - 4} L${x - 3} ${y + 2} L${x - 3} ${y - 2}Z M${x + 11} ${y - 4} L${x + 3} ${y + 2} L${x + 3} ${y - 2}Z" fill="#111"/>`;
       case "star": return `<path d="M${x} ${y - 18} L${x + 5} ${y - 6} L${x + 18} ${y - 5} L${x + 8} ${y + 4} L${x + 11} ${y + 17} L${x} ${y + 10} L${x - 11} ${y + 17} L${x - 8} ${y + 4} L${x - 18} ${y - 5} L${x - 5} ${y - 6}Z" fill="#ffe14d" ${O3}/>`;
-      case "rad": return `<text x="${x}" y="${y + 8}" font-family="Bungee" font-size="20" text-anchor="middle" fill="${k}" stroke="#111" stroke-width="1.5">RAD</text>`;
+      case "rad": return `<text x="${x}" y="${y + 8}" font-family="Russo One" font-size="20" text-anchor="middle" fill="${k}" stroke="#111" stroke-width="1.5">RAD</text>`;
+      case "emblem": return `<path d="M${x} ${y - 20} L${x + 22} ${y - 4} L${x} ${y + 20} L${x - 22} ${y - 4}Z" fill="${k}" ${O3}/><path d="M${x + 3} ${y - 13} L${x - 7} ${y + 1} H${x} L${x - 3} ${y + 13} L${x + 8} ${y - 3} H${x + 1}Z" fill="#fff" stroke="${INK}" stroke-width="1.5"/>`;
+      case "fist": return `<rect x="${x - 15}" y="${y - 12}" width="30" height="22" rx="6" fill="${k}" ${O3}/><path d="M${x - 8} ${y - 12} V${y - 2} M${x} ${y - 12} V${y - 2} M${x + 8} ${y - 12} V${y - 2}" stroke="${INK}" stroke-width="2"/><path d="M${x - 15} ${y + 2} H${x + 4}" stroke="${INK}" stroke-width="2"/>`;
       case "tape": return `<rect x="${x - 20}" y="${y - 12}" width="40" height="24" rx="3" fill="${k}" ${O3}/><circle cx="${x - 8}" cy="${y - 2}" r="4" fill="#fff" stroke="#111" stroke-width="2"/><circle cx="${x + 8}" cy="${y - 2}" r="4" fill="#fff" stroke="#111" stroke-width="2"/>`;
-      case "rewind": return `<text x="${x}" y="${y + 6}" font-family="Bungee" font-size="13" text-anchor="middle" fill="#ffe14d" stroke="#111" stroke-width="1.2">◀◀REWIND</text>`;
+      case "rewind": return `<text x="${x}" y="${y + 6}" font-family="Russo One" font-size="13" text-anchor="middle" fill="#ffe14d" stroke="#111" stroke-width="1.2">◀◀REWIND</text>`;
       default: return "";
     }
   }
   function top(s, sk, id) {
-    const c = s.topC, c2 = s.top2, d = shade(c, -0.25), body = `M24 240 C24 190 44 164 80 156 L120 156 C156 164 176 190 176 240Z`;
+    const c = s.topC, c2 = s.top2, d = shade(c, -0.25), body = `M10 240 C12 196 34 168 78 158 L122 158 C166 168 188 196 190 240Z`;
     const neckV = `<path d="M84 156 L100 180 L116 156Z" fill="${sk}" ${O3}/>`;
     switch (s.top) {
+      case "gi": return `<path d="${body}" fill="${c}" ${O}/><path d="M10 240 C12 206 22 184 40 172 L44 240Z M190 240 C188 206 178 184 160 172 L156 240Z" fill="${sk}" ${O}/><path d="M40 172 L44 200 M160 172 L156 200" stroke="${shade(c, -0.15)}" stroke-width="4" stroke-dasharray="3 4"/><path d="M80 158 L100 240 L120 158Z" fill="${sk}" ${O3}/><path d="M78 158 L108 240 L126 240 L92 158Z" fill="${shade(c, -0.1)}" ${O3}/><path d="M86 176 Q92 184 90 196" stroke="${shade(sk, -0.3)}" stroke-width="2" fill="none"/>`;
+      case "suit": return `<path d="${body}" fill="${c}" ${O}/><path d="M10 240 C12 198 30 174 64 162 L70 196 L40 240Z M190 240 C188 198 170 174 136 162 L130 196 L160 240Z" fill="${c2}" ${O3}/><path d="M80 158 Q100 172 120 158" fill="none" ${O3}/><path d="M62 196 H138" stroke="${c2}" stroke-width="7"/>${graphicIf(s, 100, 214)}`;
+      case "trench": return `<path d="M8 240 C10 192 32 166 76 156 L124 156 C168 166 190 192 192 240Z" fill="${c}" ${O}/><path d="M84 150 L62 128 L52 168 L84 196Z M116 150 L138 128 L148 168 L116 196Z" fill="${d}" ${O}/><path d="M86 160 L100 240 L114 160Z" fill="${c2}" ${O3}/><path d="M68 206 H86 M114 206 H132" stroke="${INK}" stroke-width="2"/>${[210, 228].map((y) => `<circle cx="78" cy="${y}" r="3" fill="${shade(c, 0.4)}" stroke="${INK}" stroke-width="1.5"/><circle cx="122" cy="${y}" r="3" fill="${shade(c, 0.4)}" stroke="${INK}" stroke-width="1.5"/>`).join("")}`;
+      case "bomber": return `<path d="${body}" fill="${c}" ${O}/><path d="M74 156 Q100 176 126 156 L132 168 Q100 190 68 168Z" fill="#e9dcc0" ${O3}/><path d="M70 170 Q66 166 72 162 M80 176 Q76 172 82 168 M120 176 Q124 172 118 168 M130 170 Q134 166 128 162" stroke="#b8a682" stroke-width="2" fill="none"/><path d="M100 184 V240" stroke="${INK}" stroke-width="3"/><path d="M98 190 H102 M98 202 H102 M98 214 H102 M98 226 H102" stroke="#c4c6cc" stroke-width="3"/><path d="M22 214 H54 L56 226 H20Z" fill="${c2}" ${O3}/><path d="M30 196 L44 190 L48 200 L34 204Z" fill="${c2}" ${O3}/>`;
+      case "camo": return `<defs><pattern id="cm${id}" width="40" height="40" patternUnits="userSpaceOnUse"><rect width="40" height="40" fill="${c}"/><path d="M2 6 Q12 0 18 8 Q14 16 4 14Z M22 22 Q34 18 38 28 Q30 36 22 30Z M6 28 Q12 24 16 30 Q10 36 4 34Z" fill="${d}"/><path d="M24 4 Q30 2 32 8 Q26 12 22 8Z M10 18 Q16 16 16 22 Q10 24 8 20Z" fill="${shade(c, 0.3)}"/></pattern></defs><path d="${body}" fill="${sk}" ${O}/><path d="M44 240 C44 200 54 178 70 168 L80 158 L92 160 Q100 178 108 160 L120 158 L130 168 C146 178 156 200 156 240Z" fill="url(#cm${id})" ${O}/><rect x="64" y="196" width="22" height="18" rx="3" fill="${d}" ${O3}/><rect x="114" y="196" width="22" height="18" rx="3" fill="${d}" ${O3}/><path d="M30 196 Q38 186 46 196 M154 196 Q162 186 170 196" stroke="${shade(sk, -0.3)}" stroke-width="2.5" fill="none"/>`;
+      case "armor": return `<path d="${body}" fill="${c2}" ${O}/><path d="M6 200 C6 170 30 154 62 158 L70 196 Q40 204 6 214Z" fill="${c}" ${O}/><path d="M194 200 C194 170 170 154 138 158 L130 196 Q160 204 194 214Z" fill="${c}" ${O}/><path d="M18 178 Q36 166 56 168 M182 178 Q164 166 144 168" stroke="${shade(c, 0.5)}" stroke-width="4" fill="none"/><path d="M70 174 L100 166 L130 174 L126 214 L100 228 L74 214Z" fill="${shade(c2, 0.25)}" ${O3}/><path d="M100 174 V220 M78 194 H122" stroke="${INK}" stroke-width="2" opacity=".6"/>`;
       case "flannel": return `<defs><pattern id="pl${id}" width="18" height="18" patternUnits="userSpaceOnUse"><rect width="18" height="18" fill="${c}"/><rect width="18" height="6" y="6" fill="${d}" opacity=".7"/><rect width="6" height="18" x="6" fill="${d}" opacity=".7"/><rect width="18" height="1.5" y="14" fill="${c2}" opacity=".6"/><rect width="1.5" height="18" x="14" fill="${c2}" opacity=".6"/></pattern></defs>
         <path d="${body}" fill="url(#pl${id})" ${O}/><path d="M80 156 L100 240 L120 156Z" fill="#f4f1ea" ${O3}/>${graphicIf(s, 100, 200, true)}<path d="M80 156 L94 196 L74 176Z M120 156 L106 196 L126 176Z" fill="url(#pl${id})" ${O3}/>`;
       case "windbreaker": return `<clipPath id="cb${id}"><path d="${body}"/></clipPath><path d="${body}" fill="${c}"/><g clip-path="url(#cb${id})"><path d="M0 196 L200 176 V214 L0 232Z" fill="${c2}"/><path d="M0 232 L200 214 V240 H0Z" fill="${shade(c2, 0.5)}"/></g><path d="${body}" fill="none" ${O}/><path d="M100 160 V240" stroke="#111" stroke-width="3"/><path d="M80 156 Q100 170 120 156 L124 150 Q100 162 76 150Z" fill="${d}" ${O3}/>`;
@@ -236,9 +255,9 @@ const Avatar = (() => {
         return `<path d="${body}" fill="${j}" ${O}/><path d="M80 156 L100 240 L120 156Z" fill="${c}" ${O3}/>${graphicIf(s, 100, 204, true)}<path d="M80 156 L94 200 L70 180 L66 160Z M120 156 L106 200 L130 180 L134 160Z" fill="${jd}" ${O3}/>${s.top === "denim" ? `<path d="M40 200 H72 M128 200 H160" stroke="#f2c46a" stroke-width="2" stroke-dasharray="4 3"/>` : `<path d="M112 210 L128 236" stroke="#c4c6cc" stroke-width="3"/>`}`;
       }
       case "tiedye": return `<defs><radialGradient id="td${id}" cx="40%" cy="40%" r="80%"><stop offset="0" stop-color="#ff3f8e"/><stop offset=".25" stop-color="#ffe14d"/><stop offset=".45" stop-color="#1ee3a1"/><stop offset=".65" stop-color="#2fd8ff"/><stop offset=".85" stop-color="#7b3cff"/><stop offset="1" stop-color="#ff3f8e"/></radialGradient></defs><path d="${body}" fill="url(#td${id})" ${O}/><path d="M60 200 Q100 170 140 210 M50 224 Q100 190 150 230" stroke="#fff" stroke-width="3" opacity=".4" fill="none"/><path d="M80 156 Q100 172 120 156" fill="none" ${O3}/>`;
-      case "varsity": return `<path d="${body}" fill="${c}" ${O}/><path d="M24 240 C24 196 40 172 62 162 L68 240Z M176 240 C176 196 160 172 138 162 L132 240Z" fill="#f4f1ea" ${O}/><path d="M80 156 L100 176 L120 156" fill="none" stroke="${c2}" stroke-width="8"/><path d="M100 176 V240" stroke="#111" stroke-width="2"/>${[188, 204, 220].map((y) => `<circle cx="100" cy="${y}" r="3" fill="#f4f1ea" stroke="#111" stroke-width="1.5"/>`).join("")}<text x="82" y="214" font-family="Bungee" font-size="24" text-anchor="middle" fill="${c2}" stroke="#111" stroke-width="1.5">R</text>`;
+      case "varsity": return `<path d="${body}" fill="${c}" ${O}/><path d="M24 240 C24 196 40 172 62 162 L68 240Z M176 240 C176 196 160 172 138 162 L132 240Z" fill="#f4f1ea" ${O}/><path d="M80 156 L100 176 L120 156" fill="none" stroke="${c2}" stroke-width="8"/><path d="M100 176 V240" stroke="#111" stroke-width="2"/>${[188, 204, 220].map((y) => `<circle cx="100" cy="${y}" r="3" fill="#f4f1ea" stroke="#111" stroke-width="1.5"/>`).join("")}<text x="82" y="214" font-family="Russo One" font-size="24" text-anchor="middle" fill="${c2}" stroke="#111" stroke-width="1.5">R</text>`;
       case "hawaii": return `<path d="${body}" fill="${c}" ${O}/>${[[58, 196], [84, 226], [128, 192], [150, 222], [110, 230], [66, 228], [140, 176]].map(([x, y]) => `<g transform="translate(${x} ${y})"><circle r="7" fill="${c2}"/><circle r="2.5" fill="#ffe14d"/><path d="M-12 6 Q-4 0 -2 10Z" fill="#1ee3a1"/></g>`).join("")}<path d="M80 156 L100 186 L120 156 L128 168 L100 196 L72 168Z" fill="${d}" ${O3}/><path d="${body}" fill="none" ${O}/>`;
-      case "jersey": return `<path d="M44 240 C44 200 56 178 70 168 L78 156 L90 158 Q100 180 110 158 L122 156 L130 168 C144 178 156 200 156 240Z" fill="${c}" ${O}/><path d="M24 240 C26 200 40 176 70 166 L64 240Z M176 240 C174 200 160 176 130 166 L136 240Z" fill="${sk}" ${O}/><path d="M78 158 Q100 186 122 158" fill="none" stroke="${c2}" stroke-width="5"/><text x="100" y="226" font-family="Bungee" font-size="34" text-anchor="middle" fill="${c2}" stroke="#111" stroke-width="2">23</text>`;
+      case "jersey": return `<path d="M44 240 C44 200 56 178 70 168 L78 156 L90 158 Q100 180 110 158 L122 156 L130 168 C144 178 156 200 156 240Z" fill="${c}" ${O}/><path d="M24 240 C26 200 40 176 70 166 L64 240Z M176 240 C174 200 160 176 130 166 L136 240Z" fill="${sk}" ${O}/><path d="M78 158 Q100 186 122 158" fill="none" stroke="${c2}" stroke-width="5"/><text x="100" y="226" font-family="Russo One" font-size="34" text-anchor="middle" fill="${c2}" stroke="#111" stroke-width="2">23</text>`;
       case "puffer": return `<path d="M20 240 C20 186 42 158 80 150 L120 150 C158 158 180 186 180 240Z" fill="${c}" ${O}/>${[178, 200, 222].map((y) => `<path d="M26 ${y} Q100 ${y + 8} 174 ${y}" stroke="${d}" stroke-width="3" fill="none"/>`).join("")}<path d="M76 150 Q100 132 124 150 L126 162 Q100 150 74 162Z" fill="${d}" ${O3}/><path d="M100 160 V240" stroke="#111" stroke-width="3"/><path d="M50 184 Q60 176 72 182" stroke="#fff" stroke-width="4" opacity=".5" fill="none"/>`;
       case "sequin": return `<defs><pattern id="sq${id}" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="${c}"/><circle cx="5" cy="5" r="3.2" fill="${shade(c, 0.45)}"/><circle cx="4" cy="4" r="1" fill="#fff"/></pattern></defs><path d="${body}" fill="url(#sq${id})" ${O}/><path d="M80 156 L100 240 L120 156Z" fill="#1d1d26" ${O3}/><path d="M80 156 L94 200 L70 180Z M120 156 L106 200 L130 180Z" fill="${d}" ${O3}/>`;
       case "tux": return `<path d="${body}" fill="#1d1d26" ${O}/><path d="M80 156 L100 240 L120 156Z" fill="#f4f1ea" ${O3}/><path d="M88 166 L100 172 L112 166 L112 178 L100 172 L88 178Z" fill="${c}" ${O3}/><path d="M80 156 L96 210 L66 182Z M120 156 L104 210 L134 182Z" fill="#2c2c3a" ${O3}/>${[194, 210, 226].map((y) => `<circle cx="100" cy="${y}" r="2.5" fill="#111"/>`).join("")}`;
@@ -269,44 +288,48 @@ const Avatar = (() => {
     return "";
   }
   function background(s, id) {
-    const c = s.bgC, l = shade(c, 0.35), d = shade(c, -0.3);
+    const c = s.bgC, l = shade(c, 0.35), d = shade(c, -0.4), dk = shade(c, -0.7);
+    const dots = `<pattern id="hd${id}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3.5" cy="3.5" r="1.6" fill="#000" opacity=".35"/></pattern>`;
+    const rays = (n, c1, c2) => Array.from({ length: n }, (_, i) => { const a = (i / n) * Math.PI * 2, b = ((i + 0.5) / n) * Math.PI * 2; return `<path d="M100 110 L${(100 + Math.cos(a) * 320).toFixed(1)} ${(110 + Math.sin(a) * 320).toFixed(1)} L${(100 + Math.cos(b) * 320).toFixed(1)} ${(110 + Math.sin(b) * 320).toFixed(1)}Z" fill="${i % 2 ? c1 : c2}"/>`; }).join("");
+    const city = `<path d="M0 240 V170 H18 V150 H34 V176 H46 V130 H70 V166 H84 V142 H102 V180 H116 V120 H140 V160 H152 V146 H170 V172 H186 V156 H200 V240Z" fill="#06060f"/>` + [[22, 156], [26, 164], [50, 138], [56, 146], [62, 154], [88, 150], [92, 158], [120, 128], [126, 136], [132, 144], [156, 152], [160, 160], [50, 162], [126, 160], [62, 178], [172, 180], [190, 164]].map(([x, y]) => `<rect x="${x}" y="${y}" width="3" height="4" fill="#ffd86a"/>`).join("");
     switch (s.bg) {
-      case "checker": return `<defs><pattern id="ck${id}" width="40" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(12)"><rect width="40" height="40" fill="${c}"/><rect width="20" height="20" fill="${d}"/><rect x="20" y="20" width="20" height="20" fill="${d}"/></pattern></defs><rect width="200" height="240" fill="url(#ck${id})"/>`;
-      case "zigzag": return `<rect width="200" height="240" fill="${c}"/>${[30, 80, 130, 180, 230].map((y) => `<path d="M-10 ${y} ${Array.from({ length: 12 }, (_, i) => `L${i * 20} ${y + (i % 2 ? -12 : 0)}`).join(" ")}" stroke="${d}" stroke-width="6" fill="none"/>`).join("")}`;
-      case "stars": return `<rect width="200" height="240" fill="#1a0b2e"/>${Array.from({ length: 26 }, (_, i) => `<circle cx="${(i * 73) % 200}" cy="${(i * 47) % 240}" r="${1 + (i % 3)}" fill="${i % 4 ? "#fff" : c}" class="tw" style="animation-delay:${(i % 7) * 0.3}s"/>`).join("")}`;
-      case "grid": return `<rect width="200" height="240" fill="#14002e"/><rect width="200" height="110" fill="url(#gs${id})"/><defs><linearGradient id="gs${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14002e"/><stop offset="1" stop-color="${c}"/></linearGradient></defs><circle cx="100" cy="110" r="44" fill="#ffb23f"/>${[96, 100, 104].map((y) => `<rect x="40" y="${y}" width="120" height="2" fill="#14002e"/>`).join("")}<g stroke="${c}" stroke-width="2">${[0, 1, 2, 3, 4, 5, 6].map((i) => `<path d="M0 ${110 + i * i * 3.2} H200"/>`).join("")}${[-6, -4, -2, 0, 2, 4, 6].map((i) => `<path d="M100 110 L${100 + i * 40} 240"/>`).join("")}</g>`;
+      case "checker": return `<defs>${dots}<radialGradient id="hg${id}" cx="30%" cy="20%" r="90%"><stop offset="0" stop-color="${l}"/><stop offset="1" stop-color="${d}"/></radialGradient></defs><rect width="200" height="240" fill="url(#hg${id})"/><rect width="200" height="240" fill="url(#hd${id})"/>`;
+      case "zigzag": return `<rect width="200" height="240" fill="${dk}"/><rect width="200" height="240" fill="${c}" opacity=".25"/><path d="M128 -6 L102 70 L124 72 L84 160 L110 162 L60 250" stroke="${l}" stroke-width="16" fill="none" opacity=".35" stroke-linejoin="bevel"/><path d="M128 -6 L102 70 L124 72 L84 160 L110 162 L60 250" stroke="#fff" stroke-width="6" fill="none" stroke-linejoin="bevel" class="bolt"/><path d="M40 20 L30 60 L44 62 L26 110" stroke="#fff" stroke-width="3" fill="none" opacity=".6"/>`;
+      case "stars": return `<defs><linearGradient id="sk${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b0b2a"/><stop offset=".6" stop-color="${d}"/><stop offset="1" stop-color="${c}"/></linearGradient></defs><rect width="200" height="240" fill="url(#sk${id})"/><circle cx="150" cy="44" r="20" fill="#fff6d0"/>${Array.from({ length: 16 }, (_, i) => `<circle cx="${(i * 73) % 200}" cy="${(i * 37) % 110}" r="${(i % 3) * 0.6 + 0.6}" fill="#fff" class="tw" style="animation-delay:${(i % 7) * 0.3}s"/>`).join("")}${city}`;
+      case "speed": return `<rect width="200" height="240" fill="${c}"/>${rays(36, l, c)}<circle cx="100" cy="110" r="40" fill="#fff" opacity=".35"/>`;
+      case "flames": return `<defs><linearGradient id="fl${id}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffe14d"/><stop offset=".35" stop-color="#ff7a1a"/><stop offset=".7" stop-color="#e8202a"/><stop offset="1" stop-color="#2a0505"/></linearGradient></defs><rect width="200" height="240" fill="#2a0505"/><path d="M0 240 V150 Q14 110 20 140 Q30 70 46 130 Q56 90 64 120 Q76 40 92 118 Q102 80 110 112 Q124 30 136 116 Q146 84 156 124 Q170 60 180 132 Q190 100 200 140 V240Z" fill="url(#fl${id})" class="flick"/>`;
+      case "grid": return `<rect width="200" height="240" fill="#0a0420"/><defs><linearGradient id="gs${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a0420"/><stop offset="1" stop-color="${c}"/></linearGradient></defs><rect width="200" height="120" fill="url(#gs${id})"/><g stroke="${l}" stroke-width="1.8">${[0, 1, 2, 3, 4, 5, 6].map((i) => `<path d="M0 ${120 + i * i * 3} H200"/>`).join("")}${[-6, -4, -2, 0, 2, 4, 6].map((i) => `<path d="M100 120 L${100 + i * 40} 240"/>`).join("")}</g>`;
       case "bars": return ["#c0c0c0", "#c0c000", "#00c0c0", "#00c000", "#c000c0", "#c00000", "#0000c0"].map((col, i) => `<rect x="${i * 200 / 7}" y="0" width="${200 / 7 + 1}" height="240" fill="${col}"/>`).join("") + `<rect y="180" width="200" height="60" fill="#111"/>`;
       case "static": return `<defs><filter id="ns${id}"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="${id}"/><feColorMatrix values="0 0 0 0 .8  0 0 0 0 .8  0 0 0 0 .8  0 0 0 1.6 -.4"/></filter></defs><rect width="200" height="240" fill="#555"/><rect width="200" height="240" filter="url(#ns${id})" class="noise"/>`;
-      case "gold": return `<rect width="200" height="240" fill="#2a1a40"/><circle cx="100" cy="120" r="96" fill="#d9a520" stroke="#111" stroke-width="4"/>${[80, 64, 48].map((r) => `<circle cx="100" cy="120" r="${r}" fill="none" stroke="#b5861a" stroke-width="2"/>`).join("")}<circle cx="100" cy="120" r="22" fill="#ffe9a8"/><path d="M40 60 Q60 40 90 36" stroke="#fff6c8" stroke-width="6" opacity=".6" fill="none"/>`;
-      default: { // memphis
-        return `<rect width="200" height="240" fill="${c}"/>
-          <path d="M14 30 Q24 18 34 30 T54 30 T74 30" stroke="#111" stroke-width="4" fill="none"/>
-          <path d="M150 20 L176 20 L163 42Z" fill="${shade(c, 0.6)}" stroke="#111" stroke-width="3"/>
-          <circle cx="172" cy="196" r="12" fill="none" stroke="#111" stroke-width="4"/>
-          <rect x="10" y="176" width="22" height="22" fill="${d}" stroke="#111" stroke-width="3" transform="rotate(20 21 187)"/>
-          ${[[30, 70], [40, 90], [168, 80], [178, 100], [20, 130], [184, 140]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3" fill="#111"/>`).join("")}
-          <path d="M150 120 L190 112" stroke="${l}" stroke-width="6" stroke-linecap="round"/>`;
-      }
+      case "gold": return `<rect width="200" height="240" fill="#2a1a05"/>${rays(24, "#ffd23f", "#d9a520")}<circle cx="100" cy="110" r="46" fill="#fff6c8" opacity=".5"/>`;
+      default: return `<defs>${dots}</defs><rect width="200" height="240" fill="${c}"/>${rays(18, l, c)}<rect width="200" height="240" fill="url(#hd${id})"/>`;
     }
   }
-
   // full avatar. opts: { expr: happy|sad|shock|talk, bg: false to skip the background, cls, anim }
   function svg(spec, opts = {}) {
     const s = { ...DEFAULT, ...spec }, id = ++uid;
     const sk = s.skin, skd = shade(sk, -0.14), hc = s.hairC, hs = shade(hc, -0.3), hl = shade(hc, 0.3);
     const head = HEADS[s.head] || HEADS.round;
     const bg = opts.bg === false ? "" : `<clipPath id="cp${id}"><rect width="200" height="240" rx="18"/></clipPath><g clip-path="url(#cp${id})">${background(s, id)}</g>`;
-    return `<svg class="av ${opts.cls || ""} ${opts.anim === false ? "" : "bob"}" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="avatar">${bg}
+    const defs = `<defs><clipPath id="hc${id}"><path d="${head}"/></clipPath><clipPath id="bd${id}"><path d="M8 240 C10 192 32 164 78 154 L122 154 C168 164 190 192 192 240Z"/></clipPath><pattern id="ht${id}" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="2.5" cy="2.5" r="1.1" fill="#000" opacity=".45"/></pattern></defs>`;
+    return `<svg class="av ${opts.cls || ""} ${opts.anim === false ? "" : "bob"}" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="avatar">${defs}${bg}
       <g class="body">
         ${hairBack(s, hc, hs)}
-        <rect x="84" y="126" width="32" height="40" fill="${skd}" ${O}/>
+        <path d="M80 124 L78 164 H122 L120 124Z" fill="${sk}" ${O}/>
+        <path d="M80 124 H120 L120 146 Q100 156 80 144Z" fill="${skd}"/>
+        <path d="M86 144 L96 162 M114 144 L104 162" stroke="${shade(sk, -0.35)}" stroke-width="2" fill="none"/>
         ${top(s, sk, id)}
+        <g clip-path="url(#bd${id})"><path d="M116 156 C156 166 192 196 192 240 H130 C142 212 138 182 116 156Z" fill="#000" opacity=".26"/><path d="M116 156 C156 166 192 196 192 240 H130 C142 212 138 182 116 156Z" fill="url(#ht${id})"/><path d="M18 236 C20 200 40 176 76 164" stroke="#fff" stroke-width="3" opacity=".35" fill="none"/></g>
         ${neckwear(s)}
       </g>
       <g class="headg">
         <ellipse cx="52" cy="98" rx="9" ry="12" fill="${sk}" ${O}/><ellipse cx="148" cy="98" rx="9" ry="12" fill="${sk}" ${O}/>
         ${earwear(s)}
         <path d="${head}" fill="${sk}" ${O}/>
+        <g clip-path="url(#hc${id})"><path d="M114 30 C150 46 158 100 140 140 L108 160 L102 152 C126 132 134 104 128 76 C125 58 118 46 104 36Z" fill="${shade(sk, -0.32)}" opacity=".85"/><path d="M114 30 C150 46 158 100 140 140 L108 160 L102 152 C126 132 134 104 128 76 C125 58 118 46 104 36Z" fill="url(#ht${id})"/><path d="M60 64 Q66 50 80 44" stroke="#fff" stroke-width="3" opacity=".35" fill="none"/></g>
+        <path d="M66 110 L74 118 M134 110 L126 118" stroke="${shade(sk, -0.4)}" stroke-width="2" stroke-linecap="round"/>
+        ${s.paint ? `<path d="M66 104 L90 106 L66 110Z M66 113 L88 113 L66 117Z M134 104 L110 106 L134 110Z M134 113 L112 113 L134 117Z" fill="${s.hatC}" stroke="${INK}" stroke-width="1"/>` : ""}
+        ${s.scar ? `<path d="M118 78 L128 108 M117 86 L123 84 M120 95 L126 93 M123 103 L129 101" stroke="#9a3a3a" stroke-width="2.4" stroke-linecap="round"/>` : ""}
         ${s.blush ? `<ellipse cx="70" cy="116" rx="9" ry="5" fill="#ff7a9a" opacity=".45"/><ellipse cx="130" cy="116" rx="9" ry="5" fill="#ff7a9a" opacity=".45"/>` : ""}
         ${s.freckles ? [[68, 108], [74, 112], [64, 114], [126, 108], [132, 112], [136, 106]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.6" fill="${shade(sk, -0.4)}"/>`).join("") : ""}
         ${beard(s, hc, hs)}
@@ -314,6 +337,7 @@ const Avatar = (() => {
         ${nose(s, sk)}
         <g class="mouth">${mouth(s, opts.expr)}</g>
         ${hairFront(s, hc, hs, hl)}
+        ${s.hair !== "bald" ? `<path d="M66 54 Q76 42 90 40" stroke="${hl}" stroke-width="3.5" opacity=".8" fill="none" stroke-linecap="round"/>` : ""}
         ${brows(s, hc)}
         ${glasses(s)}
         ${hat(s, hc)}
@@ -329,7 +353,7 @@ const Avatar = (() => {
       skin: p(SKIN.slice(0, 9)), head: ids("head"), hair: ids("hair"), hairC: p(HAIRC), tips: rnd() < 0.2, brows: ids("brows"), eyes: ids("eyes"), eyeC: p(CATALOG.eyeC),
       nose: ids("nose"), mouth: ids("mouth"), beard: rnd() < 0.6 ? "none" : ids("beard"), glasses: rnd() < 0.55 ? "none" : ids("glasses"), hat: rnd() < 0.5 ? "none" : ids("hat"),
       hatC: p(COLORS), top: ids("top"), topC: p(COLORS), top2: p(COLORS), graphic: ids("graphic"), neck: rnd() < 0.6 ? "none" : ids("neck"), ears: rnd() < 0.6 ? "none" : ids("ears"),
-      phones: "none", freckles: rnd() < 0.2, blush: rnd() < 0.25, bg: ids("bg"), bgC: p(COLORS),
+      phones: "none", freckles: rnd() < 0.15, blush: rnd() < 0.15, scar: rnd() < 0.15, paint: rnd() < 0.12, bg: ids("bg"), bgC: p(COLORS),
     };
   }
 

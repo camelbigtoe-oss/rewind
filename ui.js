@@ -26,14 +26,20 @@ const UI = (() => {
 
   // ---------- title ----------
   function title() {
-    osd("STOP ■", "CH 00");
+    osd("INSERT COIN", "CREDIT 00");
+    const order = ["gus", "tiff", "spinz", "remix", "exec", "sheila", "moxie", "pete", "couch"];
     app().innerHTML = `<div class="screen title">
-      <div class="bigtv"><div class="logo-wrap"><h1 class="logo" data-text="REWIND">REWIND</h1><div class="logo-tv">TV</div></div>
-      <div class="tagline">THE <span>90s</span> NEVER ENDED</div></div>
-      <button class="go huge" id="play">▶ PRESS PLAY</button>
-      <div class="foot">TV · TOONS · MUSIC · MOVIES · TOYS · DOWN UNDER</div></div>`;
+      <div class="attract">
+        <div class="roster">${order.map((id, i) => `<div class="rs rs${i}">${Avatar.svg(Cast.VJ[id].spec, { bg: false, anim: false })}</div>`).join("")}</div>
+        <div class="logo-wrap"><div class="jet"></div><h1 class="logo" data-text="REWIND">REWIND</h1><div class="logo-tv">TV</div></div>
+        <div class="tagline"><span>THE ULTIMATE 90s TRIVIA SHOWDOWN</span></div>
+      </div>
+      <button class="start" id="play">PRESS START</button>
+      <div class="foot">TV · TOONS · MUSIC · MOVIES · TOYS · DOWN UNDER<br>© 199X REWIND TV · ALL RIGHTS REWOUND</div></div>`;
     $("#play").onclick = async () => {
-      Sound.init(); Sound.play("rewind"); osd("PLAY ▶");
+      Sound.init(); Sound.play("coin"); osd("1P", "CREDIT 01");
+      $("#play").classList.add("hit");
+      await sleep(260);
       await FX.burst(520);
       Sound.want("menu");
       if (!Core.me()) creator(null); else home();
@@ -43,38 +49,38 @@ const UI = (() => {
   // ---------- home: the TV Guide ----------
   function home() {
     const p = Core.me(); if (!p) return creator(null);
-    FX.setTheme(p.theme); osd("PLAY ▶", "GUIDE");
+    FX.setTheme(p.theme); osd("1P", "CREDIT 01");
     Sound.want("menu");
     const nextVJ = Cast.ORDER.find((id) => !p.crew.includes(id)) || "exec";
     const today = p.daily.hist[Core.today()];
     const pct = Math.round((p.xp / RPG.need(p.lv)) * 100);
-    const slot = (h) => `<span class="slot">${h}</span>`;
+    const slot = (n) => `<span class="slot">${n}</span>`;
     app().innerHTML = `<div class="screen home">
       <div class="me">
-        <button class="meav" data-go="wardrobe">${Avatar.svg(p.av)}<span class="edit">✎</span></button>
-        <div class="meinfo"><div class="mename">${esc(p.name)}</div><div class="metitle">${esc(RPG.title(p.lv))}</div>
-          <div class="lv"><b>LV ${p.lv}</b><div class="xpbar"><i style="width:${pct}%"></i></div><small>${p.xp}/${RPG.need(p.lv)} XP</small></div>
-          <div class="chips">${p.cohost ? `<span class="chip">${Avatar.svg(Cast.VJ[p.cohost].spec, { anim: false, cls: "tiny" })} ${esc(Cast.VJ[p.cohost].name)}</span>` : ""}<span class="chip">🔥 ${p.career.bestStreak} best run</span></div></div>
+        <button class="meav" data-go="wardrobe">${Avatar.svg(p.av)}<span class="edit">EDIT</span></button>
+        <div class="meinfo"><div class="p1tag">PLAYER 1</div><div class="mename">${esc(p.name)}</div><div class="metitle">${esc(RPG.title(p.lv))}</div>
+          <div class="lv"><b>LV ${p.lv}</b><div class="xpbar"><i style="width:${pct}%"></i></div></div>
+          <div class="mestats">${Core.CATS.map((k) => `<div><span>${Bank.SHORT[k]}</span><i><em style="width:${p.stats[k]}%"></em></i></div>`).join("")}</div></div>
         <button class="swap" data-go="profiles" title="Switch player">👥</button>
       </div>
-      <div class="guidehead"><span>TV GUIDE</span><span class="clock" id="clock"></span></div>
+      <div class="guidehead"><span>SELECT MODE</span><span class="clock" id="clock"></span></div>
       <div class="guide">
-        <button class="show prime" data-go="prime">${slot("7:00")}<div><h3>PRIME TIME</h3><p>Tonight's episode: 5 shows, 5 different ways to answer, then the Buzzer Blitz.</p></div><em>📺</em></button>
-        <button class="show warc" data-go="war">${slot("8:30")}<div><h3>RATINGS WAR</h3><p>Up next: <b>${esc(Cast.VJ[nextVJ].name)}</b>. Win to recruit them. ${p.crew.length}/${Cast.ORDER.length} beaten.</p></div><span class="mini-av">${Avatar.svg(Cast.VJ[nextVJ].spec, { anim: false, cls: "tiny" })}</span></button>
-        <button class="show dailyc ${today ? "done" : ""}" data-go="daily">${slot("6:00")}<div><h3>DAILY BROADCAST</h3><p>${today ? `Today: ${today.marks} · ${today.score} pts` : "Ten questions. Same for everyone today."} ${p.daily.streak ? `· 📅 ${p.daily.streak}-day streak` : ""}</p></div><em>📡</em></button>
-        <button class="show" data-go="marathon">${slot("11:00")}<div><h3>MARATHON</h3><p>Endless questions, 3 tapes. Best: <b>${p.career.marathon || 0}</b></p></div><em>📼</em></button>
-        <button class="show" data-go="surf">${slot("3:30")}<div><h3>CHANNEL SURF</h3><p>Practise one channel or one round style.</p></div><em>🔁</em></button>
-        <button class="show" data-go="party">${slot("9:00")}<div><h3>HOUSE PARTY</h3><p>Pass the phone. 2 to 4 players.</p></div><em>🎉</em></button>
+        <button class="show prime" data-go="prime">${slot("01")}<div><h3>PRIME TIME</h3><p>5 stages, 5 ways to answer, then the Buzzer Blitz.</p></div><em>▶</em></button>
+        <button class="show warc" data-go="war">${slot("02")}<div><h3>RATINGS WAR</h3><p>Next challenger: <b>${esc(Cast.VJ[nextVJ].name)}</b> · ${p.crew.length}/${Cast.ORDER.length} defeated</p></div><span class="mini-av">${Avatar.svg(Cast.VJ[nextVJ].spec, { anim: false, cls: "tiny" })}</span></button>
+        <button class="show dailyc ${today ? "done" : ""}" data-go="daily">${slot("03")}<div><h3>DAILY BROADCAST</h3><p>${today ? `Cleared: ${today.marks} · ${today.score} pts` : "Ten questions. Same for everyone today."} ${p.daily.streak ? `· 📅 ${p.daily.streak}` : ""}</p></div><em>▶</em></button>
+        <button class="show" data-go="marathon">${slot("04")}<div><h3>SURVIVAL</h3><p>Endless questions, 3 lives. Best: <b>${p.career.marathon || 0}</b></p></div><em>▶</em></button>
+        <button class="show" data-go="surf">${slot("05")}<div><h3>TRAINING</h3><p>Practise one channel or one round style.</p></div><em>▶</em></button>
+        <button class="show" data-go="party">${slot("06")}<div><h3>VERSUS PARTY</h3><p>Pass the phone. 2 to 4 players.</p></div><em>▶</em></button>
       </div>
       <nav class="dock">
-        <button data-go="wardrobe"><i>👕</i>WARDROBE</button>
+        <button data-go="wardrobe"><i>👕</i>FIGHTER</button>
         <button data-go="crew"><i>🎙️</i>CREW</button>
         <button data-go="caps"><i>🥏</i>CAPS${p.packs ? `<b class="badge">${p.packs}</b>` : ""}</button>
-        <button data-go="records"><i>💿</i>RECORDS</button>
+        <button data-go="records"><i>🏆</i>RECORDS</button>
         <button data-go="stats"><i>📊</i>STATS</button>
-        <button data-go="settings"><i>⚙️</i>SETUP</button>
+        <button data-go="settings"><i>⚙️</i>OPTIONS</button>
       </nav>
-      <div class="ticker"><div>NOW SHOWING ON REWIND TV ★ ${Bank.pools.mc.length + Bank.pools.tf.length + Bank.pools.year.length + Bank.pools.quote.length + Bank.pools.odd.length + Bank.pools.pic.length} QUESTIONS ★ 9 ROUND STYLES ★ ${Cast.ORDER.length} RIVAL VJs ★ ${Cast.CAPS.length} CAPS TO COLLECT ★ BE KIND, REWIND ★ DON'T TOUCH THAT DIAL ★</div></div>
+      <div class="ticker"><div>HI-SCORE ${String(p.career.bestEpisode || 0).padStart(7, "0")} ★ ${Bank.pools.mc.length + Bank.pools.tf.length + Bank.pools.year.length + Bank.pools.quote.length + Bank.pools.odd.length + Bank.pools.pic.length} QUESTIONS ★ 9 ROUND STYLES ★ ${Cast.ORDER.length} CHALLENGERS ★ ${Cast.CAPS.length} CAPS TO COLLECT ★ HERE COMES A NEW CHALLENGER ★ BE KIND, REWIND ★</div></div>
     </div>`;
     bindGo();
     const tick = () => { const c = $("#clock"); if (!c) return; const d = new Date(); c.textContent = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); };
@@ -83,7 +89,7 @@ const UI = (() => {
 
   // ---------- character creator ----------
   const TABS = {
-    FACE: [["skin", "Skin", "swatch"], ["head", "Face shape", "thumb"], ["eyes", "Eyes", "thumb"], ["eyeC", "Eye colour", "swatch"], ["brows", "Brows", "thumb"], ["nose", "Nose", "thumb"], ["mouth", "Mouth", "thumb"], ["freckles", "Freckles", "toggle"], ["blush", "Blush", "toggle"]],
+    FACE: [["skin", "Skin", "swatch"], ["head", "Face shape", "thumb"], ["eyes", "Eyes", "thumb"], ["eyeC", "Eye colour", "swatch"], ["brows", "Brows", "thumb"], ["nose", "Nose", "thumb"], ["mouth", "Mouth", "thumb"], ["freckles", "Freckles", "toggle"], ["blush", "Blush", "toggle"], ["scar", "Battle scar", "toggle"], ["paint", "War paint", "toggle"]],
     HAIR: [["hair", "Style", "thumb"], ["hairC", "Colour", "swatch"], ["tips", "Frosted tips", "toggle"], ["beard", "Facial hair", "thumb"]],
     FIT: [["top", "Top", "thumb"], ["topC", "Main colour", "swatch"], ["top2", "Second colour", "swatch"], ["graphic", "Tee graphic", "thumb"]],
     EXTRAS: [["hat", "Headwear", "thumb"], ["hatC", "Accent colour", "swatch"], ["glasses", "Eyewear", "thumb"], ["phones", "Headphones", "thumb"], ["neck", "Neck", "thumb"], ["ears", "Earrings", "thumb"]],
@@ -95,7 +101,7 @@ const UI = (() => {
     let spec = { ...Avatar.DEFAULT, ...(prof ? prof.av : Avatar.random(Math.random, (o) => RPG.unlocked(p, o))) };
     let name = prof ? prof.name : "";
     let tab = "FACE", expr = null;
-    osd("REC ●", "WARDROBE");
+    osd("1P", "CREATE");
     function options(key) {
       const C = Avatar.CATALOG;
       if (key === "skin") return Avatar.SKIN.map((c) => ({ id: c, c }));
@@ -116,12 +122,12 @@ const UI = (() => {
         }).join("")}</div></div>`;
       }).join("");
       app().innerHTML = `<div class="screen creator">
-        <div class="ctop">${isNew ? `<h2 class="logo small">CREATE YOUR VJ</h2>` : back()}<input id="cname" maxlength="14" placeholder="Your name" value="${esc(name)}" aria-label="Name"></div>
+        <div class="ctop">${isNew ? `<h2 class="logo small">CREATE A FIGHTER</h2>` : back()}<input id="cname" maxlength="14" placeholder="Your name" value="${esc(name)}" aria-label="Name"></div>
         <div class="preview"><div class="pv" id="pv">${Avatar.svg(spec, { expr })}</div>
           <div class="pvbtns"><button data-x="">🙂</button><button data-x="happy">😁</button><button data-x="shock">😮</button><button data-x="sad">😢</button><button data-x="talk">🗣️</button><button id="rand">🎲 RANDOM</button></div></div>
         <div class="tabs">${Object.keys(TABS).map((t) => `<button class="${t === tab ? "on" : ""}" data-tab="${t}">${t}</button>`).join("")}</div>
         <div class="secs">${sections}</div>
-        <div class="csave"><button class="go big" id="save">${isNew ? "▶ START BROADCASTING" : "✔ SAVE LOOK"}</button></div></div>`;
+        <div class="csave"><button class="go big" id="save">${isNew ? "▶ ENTER THE ARENA" : "✔ SAVE LOOK"}</button></div></div>`;
       $("#cname").oninput = (e) => (name = e.target.value);
       $$("[data-tab]").forEach((b) => (b.onclick = () => { tab = b.dataset.tab; Sound.play("click"); render(); }));
       $$("[data-x]").forEach((b) => (b.onclick = () => { expr = b.dataset.x || null; $("#pv").innerHTML = Avatar.svg(spec, { expr }); Sound.play("click"); }));
@@ -176,19 +182,30 @@ const UI = (() => {
   }
 
   // ---------- Ratings War ladder ----------
+  // Ratings War: a fighting-game character select. Beat each challenger to unlock the next.
+  let selVJ = null;
   function warLadder() {
-    const p = Core.me(); osd(null, "WAR");
+    const p = Core.me(); osd("1P", "SELECT");
     const next = Cast.ORDER.findIndex((id) => !p.crew.includes(id));
-    app().innerHTML = `<div class="screen list">${back()}<h2 class="logo small">RATINGS WAR</h2><p class="sub">Climb the schedule. Each VJ you beat joins your crew. The Network Exec waits at the top.</p>
+    const open = (id, i) => p.crew.includes(id) || i <= (next < 0 ? 99 : next);
+    if (!selVJ || !open(selVJ, Cast.ORDER.indexOf(selVJ))) selVJ = Cast.ORDER[next < 0 ? Cast.ORDER.length - 1 : next];
+    const v = Cast.VJ[selVJ], rec = p.career.wars?.[selVJ], beaten = p.crew.includes(selVJ);
+    app().innerHTML = `<div class="screen list select">${back()}<h2 class="sel-title">SELECT YOUR OPPONENT</h2>
+      <div class="selpreview ${v.boss ? "boss" : ""}">
+        <div class="spav">${Avatar.svg(v.spec)}<span class="p1">CPU</span></div>
+        <div class="spinfo"><b>${esc(v.name)}</b><em>${esc(v.style)}</em><small>${esc(v.tag)}</small>
+          <div class="bars">${Core.CATS.map((k) => `<div><span>${Bank.SHORT[k]}</span><i style="width:${v.stats[k]}%"></i></div>`).join("")}</div>
+          <div class="sprec">LV ${v.lv}${rec ? ` · W ${rec.w} L ${rec.l}` : ""}${beaten ? " · DEFEATED" : ""}</div></div>
+      </div>
+      <div class="selgrid">${Cast.ORDER.map((id, i) => {
+        const o = open(id, i);
+        return `<button class="tile ${o ? "" : "locked"} ${id === selVJ ? "on" : ""} ${p.crew.includes(id) ? "beaten" : ""} ${Cast.VJ[id].boss ? "boss" : ""}" data-vj="${id}" ${o ? "" : "disabled"}>${o ? Avatar.svg(Cast.VJ[id].spec, { anim: false }) : `<span class="sil">${Avatar.svg(Cast.VJ[id].spec, { anim: false, bg: false })}</span><span class="q">?</span>`}${id === selVJ ? `<span class="cur">P1</span>` : ""}</button>`;
+      }).join("")}</div>
       ${coPicker(p)}
-      <div class="ladder">${Cast.ORDER.map((id, i) => {
-        const v = Cast.VJ[id], beaten = p.crew.includes(id), open = beaten || i <= (next < 0 ? 99 : next), rec = p.career.wars?.[id];
-        return `<button class="rung ${beaten ? "beaten" : ""} ${open ? "" : "locked"} ${v.boss ? "boss" : ""}" data-vj="${id}" ${open ? "" : "disabled"}>
-          <span class="tslot">${["4:00", "4:30", "5:00", "5:30", "6:00", "7:30", "8:00", "9:30", "MIDNIGHT"][i]}</span>${open ? Avatar.svg(v.spec, { anim: false, cls: "tiny" }) : `<span class="q">?</span>`}
-          <div><b>${open ? esc(v.name) : "???"}</b><small>${open ? `LV ${v.lv} · loves ${Bank.NAMES[v.fav]}` : "Beat the VJ above first"}</small>${rec ? `<small>W ${rec.w} · L ${rec.l}</small>` : ""}</div><em>${beaten ? "✔" : open ? "⚔️" : "🔒"}</em></button>`;
-      }).join("")}</div></div>`;
+      <button class="go huge" id="fight">FIGHT!</button></div>`;
     bindGo(); bindCo(p, warLadder);
-    $$(".rung").forEach((b) => (b.onclick = () => { Sound.play("click"); Modes.war(b.dataset.vj, p.cohost); }));
+    $$(".tile").forEach((b) => (b.onclick = () => { if (b.dataset.vj === selVJ) return; selVJ = b.dataset.vj; Sound.play("click"); warLadder(); }));
+    $("#fight").onclick = () => { Sound.play("buzz"); Modes.war(selVJ, p.cohost); };
   }
   function coPicker(p) {
     if (!p.crew.length) return `<div class="copick empty">No crew yet. Win a Ratings War to recruit your first co-host.</div>`;

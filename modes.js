@@ -31,6 +31,14 @@ const Modes = (() => {
     if (diff > 0) { const f = document.createElement("em"); f.className = "plus"; f.textContent = "+" + diff; el.parentElement.appendChild(f); setTimeout(() => f.remove(), 1100); }
   }
   function streakBadge(i, s) { const el = $("#stk" + i); if (el) { el.textContent = s >= 3 ? `🔥${s}` : ""; el.className = "stk" + (s >= 5 ? " hot" : ""); } }
+  // big arcade callouts over the screen ("ROUND 1", "FIGHT!", "K.O.!")
+  async function announce(words, cls = "") {
+    for (const w of words) {
+      const el = document.createElement("div"); el.className = "announce " + cls; el.innerHTML = `<span>${esc(w)}</span>`;
+      document.body.appendChild(el); Sound.play(w.includes("FIGHT") || cls === "ko" ? "fight" : "announce");
+      await sleep(w.includes("FIGHT") || cls ? 1100 : 900); el.remove();
+    }
+  }
   const multFor = (s) => (s >= 5 ? 2 : s >= 3 ? 1.5 : 1);
   const stage = () => $("#stage");
   function checkQuit() { if (quitFlag) { quitFlag = false; throw new Error("quit"); } }
@@ -163,18 +171,19 @@ const Modes = (() => {
     Sound.want("war");
     await FX.burst(400);
     await new Promise((res) => {
-      app().innerHTML = `<div class="screen vs"><div class="vsrow"><div class="vsl">${Avatar.svg(p.av)}<b>${esc(p.name)}</b><small>LV ${p.lv}</small></div><div class="vsx">VS</div><div class="vsr">${Avatar.svg(vj.spec)}<b>${esc(vj.name)}</b><small>LV ${vj.lv}</small></div></div>
+      app().innerHTML = `<div class="screen vs"><div class="vsbg"></div><div class="vsrow"><div class="vsl">${Avatar.svg(p.av)}<b>${esc(p.name)}</b><small>LV ${p.lv}</small></div><div class="vsx">VS</div><div class="vsr">${Avatar.svg(vj.spec)}<b>${esc(vj.name)}</b><small>${esc(vj.style)} · LV ${vj.lv}</small></div></div>
         <div class="bubble">“${esc(pick(vj.lines.intro))}”</div>
-        <div class="howto"><b>TUG OF RATINGS.</b> You both answer every question. Right and faster pulls the ratings your way. Drag them all the way to your side to steal ${esc(vj.name)}'s timeslot.</div>
-        <button class="go big" id="go">▶ GO LIVE</button></div>`;
+        <div class="howto"><b>HOW TO WIN.</b> You both answer every question. Right and faster lands a hit. Drain ${esc(vj.name)}'s ratings bar to steal their timeslot.</div>
+        <button class="go huge" id="go">FIGHT!</button></div>`;
       $("#go").onclick = () => { Sound.play("click"); res(); };
     });
     const MAX = 3; let m = 0, n = 0;
     const types = ["mc", "tf", "quote", "pic", "odd", "year"];
     const avoid = new Set();
-    frame([pl, { name: vj.name, av: vj.spec, score: "LV " + vj.lv }], 0, `<div class="tug" id="tug">${Array.from({ length: MAX * 2 + 1 }, (_, k) => `<i data-k="${k - MAX}"></i>`).join("")}<span class="knob" id="knob">📺</span></div><div class="vjline" id="vjl"></div>`);
-    const tug = () => { $("#knob").style.left = `${((m + MAX) / (MAX * 2)) * 100}%`; document.querySelectorAll("#tug i").forEach((el) => el.classList.toggle("lit", (m > 0 && +el.dataset.k > 0 && +el.dataset.k <= m) || (m < 0 && +el.dataset.k < 0 && +el.dataset.k >= m))); };
+    frame([pl], 0, `<div class="fbar" id="tug"><div class="fside fme"><b>${esc(p.name)}</b><span><i id="hpme"></i></span></div><div class="fround" id="frnd">1</div><div class="fside fthem"><b>${esc(vj.name)}</b><span><i id="hpthem"></i></span></div></div><div class="vjline" id="vjl"></div>`);
+    const tug = () => { $("#hpme").style.width = `${100 - (Math.max(0, -m) / MAX) * 100}%`; $("#hpthem").style.width = `${100 - (Math.max(0, m) / MAX) * 100}%`; $("#frnd").textContent = n || 1; };
     tug();
+    await announce(["ROUND 1", "FIGHT!"]);
     const say = (k) => { const el = $("#vjl"); if (el) { el.innerHTML = `${Avatar.svg(vj.spec, { anim: false, cls: "tiny", expr: k === "right" ? "happy" : k === "wrong" ? "sad" : "talk" })}<span>“${esc(pick(vj.lines[k]))}”</span>`; el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); } };
     while (Math.abs(m) < MAX) {
       checkQuit(); n++;
@@ -202,11 +211,12 @@ const Modes = (() => {
       }
       m += d; tug();
       say(d > 0 ? "wrong" : d < 0 ? "right" : pick(["right", "wrong"]));
-      if (d) { Sound.play(d > 0 ? "coin" : "buzz"); $("#tug").classList.add(d > 0 ? "pullme" : "pullthem"); setTimeout(() => $("#tug")?.classList.remove("pullme", "pullthem"), 500); }
+      if (d) { Sound.play(d > 0 ? "hit" : "hurt"); $("#tug").classList.add(d > 0 ? "pullme" : "pullthem"); setTimeout(() => $("#tug")?.classList.remove("pullme", "pullthem"), 500); }
       if (n >= 25 && m !== 0) break;
       await sleep(500);
     }
     const won = m > 0;
+    await announce([won ? "K.O.!" : "YOU LOSE"], won ? "ko" : "lose");
     const c = p.career; (c.wars ||= {}); const w = (c.wars[vjId] ||= { w: 0, l: 0 }); won ? w.w++ : w.l++;
     let xp = pl.xp + (won ? 60 + vj.lv * 4 : 15), newCrew = false;
     if (won) { RPG.bump(p, "warWins"); p.packs += 1; if (!p.crew.includes(vjId)) { p.crew.push(vjId); newCrew = true; } }
@@ -215,7 +225,7 @@ const Modes = (() => {
     Sound.want("menu");
     await FX.burst(400);
     await new Promise((res) => {
-      app().innerHTML = `<div class="screen vs end ${won ? "won" : "lost"}"><h1 class="logo small">${won ? "TIMESLOT STOLEN!" : "CANCELLED!"}</h1>
+      app().innerHTML = `<div class="screen vs end ${won ? "won" : "lost"}"><div class="vsbg"></div><h1 class="logo small">${won ? "YOU WIN!" : "CANCELLED!"}</h1>
         <div class="vsrow"><div class="vsl">${Avatar.svg(p.av, { expr: won ? "happy" : "sad" })}</div><div class="vsr">${Avatar.svg(vj.spec, { expr: won ? "sad" : "happy" })}</div></div>
         <div class="bubble">“${esc(pick(won ? vj.lines.lose : vj.lines.win))}”</div>
         ${newCrew ? `<div class="unlock">🎉 <b>${esc(Cast.PRIZE[vjId])}</b>${vjId !== "spinz" && vjId !== "exec" ? `<br><small>Perk: ${Cast.PERKS[vj.perk].icon} ${Cast.PERKS[vj.perk].name} — ${esc(Cast.PERKS[vj.perk].desc)}</small>` : ""}</div>` : ""}
