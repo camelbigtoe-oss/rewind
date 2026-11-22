@@ -74,11 +74,13 @@ const Rounds = (() => {
       const perk = opts.perk && opts.perk.left > 0 && !opts.noPerks ? Cast.PERKS[opts.perk.id] : null;
       const perkOK = perk && perkApplies(opts.perk.id, q);
       const vj = opts.vj;
+      // the character who "asks" the question: the rival in a fight, otherwise your co-host
+      const faceSpec = opts.face || (vj && vj.spec) || Cast.VJ[(Core.me() && Core.me().cohost) || "remix"].spec;
       host.innerHTML = `<div class="qcard t-${q.type}${q.blitz ? " t-blitz" : ""}">
         <div class="qhead"><span class="chan">${opts.label || "CH " + String(T.ch).padStart(2, "0")}</span><span class="qcat">${cat}</span>${opts.mult > 1 ? `<span class="mult">×${opts.mult}</span>` : ""}</div>
         <div class="timer"><i></i><b></b></div>
         ${vj ? `<div class="vjbuzz" id="vjb">${Avatar.svg(vj.spec, { anim: false, cls: "tiny" })}<span>${esc(vj.name)} is thinking…</span></div>` : ""}
-        <div class="qbody">${body}</div>
+        <div class="qtop">${faceSpec && !["pic", "order"].includes(q.type) && !q.blitz ? `<div class="qface">${Avatar.svg(faceSpec, { bg: false, anim: false })}</div>` : ""}<div class="qbody">${body}</div></div>
         ${ctrl}
         <div class="perkbar">${perk && perkOK && opts.perk.id !== "local" ? `<button class="perk" id="perk">${perk.icon} ${perk.name} <small>×${opts.perk.left}</small></button>` : ""}<div class="note" id="note"></div></div>
         <div class="fact" id="fact"></div>

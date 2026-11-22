@@ -151,7 +151,10 @@ const Modes = (() => {
     const best = results.slice().sort((a, b) => b.pl.score - a.pl.score);
     await FX.burst(400);
     return new Promise((res) => {
-      app().innerHTML = `<div class="screen ratings"><h1 class="logo small">THE RATINGS ARE IN</h1>
+      const top = best[0], LINES = ["", "TRY AGAIN!", "KEEP TRAINING!", "NOT BAD!", "CHAMPION!", "YOU'RE A LEGEND!"];
+      app().innerHTML = `<div class="screen ratings">
+        <div class="legend st${top.st}"><h2 class="brush">Results</h2><div class="legend-line">${party ? esc(top.pl.name) + " WINS!" : LINES[top.st]}</div>
+          <div class="medal"><span>★</span></div><div class="legend-av">${Avatar.svg(top.pl.av, { bg: false, expr: top.st >= 3 ? "happy" : "sad" })}</div></div>
         ${best.map((r, k) => `<div class="rcard ${k === 0 && party ? "win" : ""}">${Avatar.svg(r.pl.av, { expr: r.st >= 3 ? "happy" : "sad" })}
           <div class="rinfo"><b>${esc(r.pl.name)}</b><div class="stars">${"★".repeat(r.st)}<span>${"★".repeat(5 - r.st)}</span></div>
           <div class="share">${(r.frac * 100).toFixed(0)}% right · share <b>${(4 + r.frac * 24).toFixed(1)}</b></div><div class="bignum">${r.pl.score.toLocaleString()} pts</div>

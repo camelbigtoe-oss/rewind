@@ -70,6 +70,9 @@ const Cast = (() => {
     },
   };
   const ORDER = ["remix", "tiff", "gus", "spinz", "moxie", "pete", "sheila", "couch", "exec"];
+  // painted portraits supplied as files: list a rival's id here once art/<id>.webp exists
+  const ART = [];
+  for (const id of ART) VJ[id].spec.art = `art/${id}.webp`;
   // what you unlock for beating each VJ
   const PRIZE = { remix: "Kid Remix joins your crew", tiff: "Tiffani joins your crew", gus: "Grunge Gus joins your crew", spinz: "DJ cans headphones", moxie: "Mama Moxie joins your crew", pete: "Pixel Pete joins your crew", sheila: "Sheila Static joins your crew", couch: "Captain Couch joins your crew", exec: "Awards tux + the Ratings Crown" };
 

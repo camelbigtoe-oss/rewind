@@ -25,80 +25,61 @@ const UI = (() => {
   }
 
   // ---------- title ----------
-  // ---------- title card (first screen, unlocks audio on tap) ----------
+  // ---------- title: a 90s cartoon-opening logo flying in through space ----------
   function title() {
     osd("", "");
-    const trio = ["remix", "tiff", "couch"];
-    app().innerHTML = `<section class="screen title-screen">
-      <div class="ep-card"><span>CHANNEL 90</span><span>ON AIR</span></div>
-      <div class="logo-wrap"><div class="kana">リワインド・テレビ</div><h1 class="logo">REWIND<br>TV</h1><div class="logo-sub">90s pop trivia. Don't touch that dial.</div></div>
-      <div class="cast-row">${trio.map((id, i) => `<figure class="cast ${i === 2 ? "hunter" : i === 1 ? "host" : ""}">${Avatar.svg(Cast.VJ[id].spec, { bg: false })}<figcaption>${esc(Cast.VJ[id].name.split(" (")[0])}<small>${esc(Cast.VJ[id].style)}</small></figcaption></figure>`).join("")}</div>
-      <button class="press" id="play">▶ PRESS START</button>
-      <div class="title-foot"><span>TV · TOONS · MUSIC · MOVIES · TOYS · DOWN UNDER</span></div></section>`;
+    app().innerHTML = `<section class="screen intro">
+      <div class="space"></div>
+      <div class="jet"><i></i></div>
+      <div class="intro-logo"><span class="w1">REWIND</span><span class="w2">TV</span></div>
+      <div class="intro-tag">90s LEGENDS · ULTIMATE QUIZ</div>
+      <button class="press" id="play">PRESS START</button>
+      <div class="intro-foot">TV · TOONS · MUSIC · MOVIES · TOYS · DOWN UNDER</div>
+    </section>`;
     $("#play").onclick = async () => {
-      Sound.init(); Sound.play("coin");
+      Sound.init(); Sound.play("fight");
       await FX.burst(480);
       Sound.want("menu");
       if (!Core.me()) creator(null); else home();
     };
   }
 
-  // a visual-novel dialogue box: face, name plate, line
-  const vn = (spec, name, line, cls = "") => `<div class="vn ${cls}"><div class="vn-face">${Avatar.svg(spec, { anim: false, bg: false, expr: "talk" })}</div><span class="vn-name">${esc(name)}</span><p class="vn-text">${esc(line)}</p><i class="vn-next">▼</i></div>`;
-
-  // ---------- home: title card with the main menu ----------
+  // ---------- home: logo + cast line-up, menu plates, roster and hidden characters ----------
   function home() {
     const p = Core.me(); if (!p) return creator(null);
     FX.setTheme(p.theme); FX.setMood("city"); osd("", "");
     Sound.want("menu");
-    const nextVJ = Cast.ORDER.find((id) => !p.crew.includes(id)) || "exec", rival = Cast.VJ[nextVJ];
-    const co = p.cohost ? Cast.VJ[p.cohost] : Cast.VJ.remix;
+    const next = Cast.ORDER.findIndex((id) => !p.crew.includes(id));
+    const known = Cast.ORDER.filter((id, i) => p.crew.includes(id) || i === next);
+    const hidden = Cast.ORDER.filter((id) => !known.includes(id));
     const today = p.daily.hist[Core.today()];
-    const pct = Math.round((p.xp / RPG.need(p.lv)) * 100);
-    const choice = (go, b, small, extra = "") => `<button class="choice" data-go="${go}"><b>${b}</b><small>${small}</small>${extra}</button>`;
+    const lineup = [Cast.ORDER[next < 0 ? 8 : next], ...p.crew.slice(-3)].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 4);
+    const plate = (go, label, extra = "") => `<button class="plate" data-go="${go}"><span>${label}</span>${extra}</button>`;
+    const tile = (id) => `<button class="rtile ${p.crew.includes(id) ? "won" : "next"}" data-go="${p.crew.includes(id) ? "crew" : "war"}">${Avatar.svg(Cast.VJ[id].spec, { anim: false })}<b>${esc(Cast.VJ[id].name.split(" (")[0])}</b></button>`;
     app().innerHTML = `<section class="screen home">
-      <div class="ep-card"><span>EPISODE ${String((p.career.episodes || 0) + 1).padStart(2, "0")}</span><span>${today ? "DAILY DONE ✔" : "TONIGHT"}</span></div>
-      <div class="logo-wrap small"><div class="kana">リワインド・テレビ</div><h1 class="logo">REWIND TV</h1></div>
-      <div class="cast-row">
-        <figure class="cast me-c" data-go="wardrobe">${Avatar.svg(p.av, { bg: false })}<figcaption>${esc(p.name)}<small>Lv ${p.lv} · ${esc(RPG.title(p.lv))}</small></figcaption></figure>
-        <figure class="cast host">${Avatar.svg(co.spec, { bg: false })}<figcaption>${esc(co.name.split(" (")[0])}<small>${p.cohost ? "Co-host" : "Your host"}</small></figcaption></figure>
-        <figure class="cast hunter" data-go="war">${Avatar.svg(rival.spec, { bg: false })}<figcaption>${esc(rival.name.split(" (")[0])}<small>Next rival</small></figcaption></figure>
+      <div class="hero">
+        <div class="lineup">
+          <div class="lu-me">${Avatar.svg(p.av, { bg: false })}</div>
+          ${lineup.map((id, i) => `<div class="lu-${i}">${Avatar.svg(Cast.VJ[id].spec, { bg: false, anim: false })}</div>`).join("")}
+        </div>
+        <div class="brand"><h1 class="logo"><span>REWIND</span><span>TV</span></h1><div class="tag">90s legends. Ultimate quiz.</div></div>
       </div>
-      <div id="t-line">${vn(rival.spec, rival.name.split(" (")[0].toUpperCase(), rival.lines.intro[0], "hunter")}</div>
-      <nav class="menu win">
-        ${choice("prime", "Prime Time", "Tonight's episode: 5 shows, then the Buzzer Blitz")}
-        ${choice("war", "Ratings War", `Beat the rival VJs · ${p.crew.length}/${Cast.ORDER.length} beaten`)}
-        ${choice("daily", "Daily Broadcast", today ? `Done today: ${today.marks}` : "Ten questions, same for everyone today")}
-        ${choice("marathon", "Marathon", `Endless questions, 3 tapes · best ${p.career.marathon || 0}`)}
-        ${choice("surf", "Channel Surf", "Practise one channel or round style")}
-        ${choice("party", "House Party", "2 to 4 players, pass the phone")}
+      <nav class="plates">
+        <div class="col">
+          ${plate("prime", "Prime Time")}${plate("war", "Ratings War")}${plate("daily", today ? "Daily ✔" : "Daily Broadcast")}${plate("marathon", "Marathon")}${plate("surf", "Channel Surf")}${plate("party", "House Party")}
+        </div>
+        <div class="col">
+          ${plate("wardrobe", "Wardrobe")}${plate("crew", "Crew")}${plate("caps", "Caps", p.packs ? `<em class="badge">${p.packs}</em>` : "")}${plate("records", "Gold Records")}${plate("stats", "Career Stats")}${plate("settings", "Options")}
+        </div>
       </nav>
-      <nav class="menu win small">
-        ${choice("wardrobe", "Wardrobe", "Change your look")}
-        ${choice("crew", "Crew", "Your co-hosts and their perks")}
-        ${choice("caps", "Caps", "Slam packs, collect all 48", p.packs ? `<em class="badge">${p.packs}</em>` : "")}
-        ${choice("records", "Gold Records", "Achievements and channel themes")}
-        ${choice("stats", "Career stats", "Records, results and streaks")}
-        ${choice("settings", "Options", "Sound, music and more")}
-      </nav>
-      <div class="records win">
-        <div><small>LEVEL</small><b>${p.lv}</b><i class="xpbar"><em style="width:${pct}%"></em></i></div>
-        <div><small>BEST RUN</small><b>${p.career.bestStreak}</b></div>
-        <div><small>CAPS</small><b>${Object.keys(p.caps).length}/${Cast.CAPS.length}</b></div>
-      </div>
-      <div class="title-foot"><button class="link" data-go="profiles">Switch player</button><button class="link" id="snd">${Core.set.sound ? "Sound on" : "Sound off"}</button></div>
+      <div class="padhint"><i class="ba">A</i> SELECT <i class="bb">B</i> BACK <span>LV ${p.lv} · ${esc(p.name)}</span></div>
+      <section class="panel roster"><h2 class="brush">Character Roster</h2>
+        <div class="rgrid"><button class="rtile you" data-go="wardrobe">${Avatar.svg(p.av, { anim: false })}<b>${esc(p.name)}</b></button>${known.map(tile).join("")}</div></section>
+      ${hidden.length ? `<section class="panel hiddenp"><h2 class="brush">Hidden Characters</h2><div class="hgrid">${hidden.map(() => `<div class="htile"><span>?</span></div>`).join("")}</div></section>` : ""}
+      <div class="foot2"><button class="link" data-go="profiles">Switch player</button><button class="link" id="snd">${Core.set.sound ? "Sound on" : "Sound off"}</button></div>
     </section>`;
     bindGo();
     $("#snd").onclick = () => { Core.set.sound = !Core.set.sound; Core.set.music = Core.set.sound; Core.saveSet(); Sound.refresh(); home(); };
-    // the rival keeps trash-talking
-    let li = 0;
-    clearInterval(home.t);
-    home.t = setInterval(() => {
-      const el = $("#t-line"); if (!el) return clearInterval(home.t);
-      li = (li + 1) % (rival.lines.intro.length + rival.lines.win.length);
-      const line = [...rival.lines.intro, ...rival.lines.win][li];
-      el.innerHTML = vn(rival.spec, rival.name.split(" (")[0].toUpperCase(), line, "hunter pop");
-    }, 4500);
   }
 
   // ---------- character creator ----------

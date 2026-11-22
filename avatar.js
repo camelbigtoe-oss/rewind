@@ -360,9 +360,10 @@ const Avatar = (() => {
     };
   }
 
-  // the avatar everywhere in the game is a pixel portrait (pixel.js); vsvg keeps the vector version
+  // painted art for a character (spec.art, a file in art/) wins; otherwise the cel-shaded vector portrait
   function svg(spec, opts = {}) {
-    return `<img class="av px ${opts.cls || ""} ${opts.anim === false ? "" : "bob"}" src="${Pixel.render(spec, opts)}" alt="" draggable="false">`;
+    if (spec && spec.art) return `<img class="av art ${opts.cls || ""} ${opts.anim === false ? "" : "bob"}" src="${spec.art}" alt="" draggable="false">`;
+    return vsvg(spec, opts);
   }
 
   function random(rnd = Math.random, ok = () => true) {
