@@ -25,26 +25,29 @@ const UI = (() => {
   }
 
   // ---------- title ----------
-  // ---------- title: a 90s cartoon-opening logo flying in through space ----------
+  // the logo as bouncy cartoon letters, each its own colour
+  const LETTERS = ["#ff4a3a", "#ff8a1a", "#ffd21f", "#4ad04a", "#2ab0ff", "#b05aff"];
+  const bounce = (word, cls = "") => `<span class="toon ${cls}">${[...word].map((ch, i) => `<i style="--c:${LETTERS[i % LETTERS.length]};--d:${(i * 0.08).toFixed(2)}s">${ch}</i>`).join("")}</span>`;
+
+  // ---------- title: a Saturday-morning cartoon title card ----------
   function title() {
     osd("", "");
     app().innerHTML = `<section class="screen intro">
-      <div class="space"></div>
-      <div class="jet"><i></i></div>
-      <div class="intro-logo"><span class="w1">REWIND</span><span class="w2">TV</span></div>
-      <div class="intro-tag">90s LEGENDS · ULTIMATE QUIZ</div>
-      <button class="press" id="play">PRESS START</button>
-      <div class="intro-foot">TV · TOONS · MUSIC · MOVIES · TOYS · DOWN UNDER</div>
+      <div class="ribbon">SATURDAY MORNING</div>
+      <h1 class="bigtitle">${bounce("REWIND")}${bounce("TV", "tv")}</h1>
+      <div class="intro-tag">90s pop trivia · cartoons · TV · music · movies · toys</div>
+      <button class="go huge press" id="play">PRESS PLAY ▶</button>
+      <div class="intro-foot">Don't touch that dial!</div>
     </section>`;
     $("#play").onclick = async () => {
-      Sound.init(); Sound.play("fight");
+      Sound.init(); Sound.play("coin");
       await FX.burst(480);
       Sound.want("menu");
       if (!Core.me()) creator(null); else home();
     };
   }
 
-  // ---------- home: logo + cast line-up, menu plates, roster and hidden characters ----------
+  // ---------- home: the cartoon channel guide ----------
   function home() {
     const p = Core.me(); if (!p) return creator(null);
     FX.setTheme(p.theme); FX.setMood("city"); osd("", "");
@@ -53,29 +56,22 @@ const UI = (() => {
     const known = Cast.ORDER.filter((id, i) => p.crew.includes(id) || i === next);
     const hidden = Cast.ORDER.filter((id) => !known.includes(id));
     const today = p.daily.hist[Core.today()];
-    const lineup = [Cast.ORDER[next < 0 ? 8 : next], ...p.crew.slice(-3)].filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 4);
-    const plate = (go, label, extra = "") => `<button class="plate" data-go="${go}"><span>${label}</span>${extra}</button>`;
+    const pct = Math.round((p.xp / RPG.need(p.lv)) * 100);
+    const plate = (go, label, icon, extra = "") => `<button class="plate" data-go="${go}"><em>${icon}</em><span>${label}</span>${extra}</button>`;
     const tile = (id) => `<button class="rtile ${p.crew.includes(id) ? "won" : "next"}" data-go="${p.crew.includes(id) ? "crew" : "war"}">${Avatar.svg(Cast.VJ[id].spec, { anim: false })}<b>${esc(Cast.VJ[id].name.split(" (")[0])}</b></button>`;
     app().innerHTML = `<section class="screen home">
-      <div class="hero">
-        <div class="lineup">
-          <div class="lu-me">${Avatar.svg(p.av, { bg: false })}</div>
-          ${lineup.map((id, i) => `<div class="lu-${i}">${Avatar.svg(Cast.VJ[id].spec, { bg: false, anim: false })}</div>`).join("")}
-        </div>
-        <div class="brand"><h1 class="logo"><span>REWIND</span><span>TV</span></h1><div class="tag">90s legends. Ultimate quiz.</div></div>
+      <div class="hometop">
+        <h1 class="bigtitle small">${bounce("REWIND")}${bounce("TV", "tv")}</h1>
+        <button class="mebadge" data-go="wardrobe">${Avatar.svg(p.av)}<b>${esc(p.name)}</b><small>Level ${p.lv} · ${esc(RPG.title(p.lv))}</small><i class="xpbar"><em style="width:${pct}%"></em></i></button>
       </div>
       <nav class="plates">
-        <div class="col">
-          ${plate("prime", "Prime Time")}${plate("war", "Ratings War")}${plate("daily", today ? "Daily ✔" : "Daily Broadcast")}${plate("marathon", "Marathon")}${plate("surf", "Channel Surf")}${plate("party", "House Party")}
-        </div>
-        <div class="col">
-          ${plate("wardrobe", "Wardrobe")}${plate("crew", "Crew")}${plate("caps", "Caps", p.packs ? `<em class="badge">${p.packs}</em>` : "")}${plate("records", "Gold Records")}${plate("stats", "Career Stats")}${plate("settings", "Options")}
-        </div>
+        ${plate("prime", "Prime Time", "📺")}${plate("war", "Ratings War", "⚔️")}${plate("daily", today ? "Daily done!" : "Daily Broadcast", "📅")}
+        ${plate("marathon", "Marathon", "📼")}${plate("surf", "Channel Surf", "🔁")}${plate("party", "House Party", "🎉")}
+        ${plate("wardrobe", "My Badge", "🎨")}${plate("crew", "Crew", "🎙️")}${plate("caps", "Caps", "🥏", p.packs ? `<i class="badge">${p.packs}</i>` : "")}
+        ${plate("records", "Gold Records", "🏆")}${plate("stats", "Stats", "📊")}${plate("settings", "Options", "⚙️")}
       </nav>
-      <div class="padhint"><i class="ba">A</i> SELECT <i class="bb">B</i> BACK <span>LV ${p.lv} · ${esc(p.name)}</span></div>
-      <section class="panel roster"><h2 class="brush">Character Roster</h2>
-        <div class="rgrid"><button class="rtile you" data-go="wardrobe">${Avatar.svg(p.av, { anim: false })}<b>${esc(p.name)}</b></button>${known.map(tile).join("")}</div></section>
-      ${hidden.length ? `<section class="panel hiddenp"><h2 class="brush">Hidden Characters</h2><div class="hgrid">${hidden.map(() => `<div class="htile"><span>?</span></div>`).join("")}</div></section>` : ""}
+      <section class="panel roster"><h2 class="brush">Rival channels</h2>
+        <div class="rgrid">${known.map(tile).join("")}${hidden.map(() => `<div class="htile"><span>?</span></div>`).join("")}</div></section>
       <div class="foot2"><button class="link" data-go="profiles">Switch player</button><button class="link" id="snd">${Core.set.sound ? "Sound on" : "Sound off"}</button></div>
     </section>`;
     bindGo();
@@ -84,18 +80,17 @@ const UI = (() => {
 
   // ---------- character creator ----------
   const TABS = {
-    FACE: [["skin", "Skin", "swatch"], ["head", "Face shape", "thumb"], ["eyes", "Eyes", "thumb"], ["eyeC", "Eye colour", "swatch"], ["brows", "Brows", "thumb"], ["nose", "Nose", "thumb"], ["mouth", "Mouth", "thumb"], ["freckles", "Freckles", "toggle"], ["blush", "Blush", "toggle"], ["scar", "Battle scar", "toggle"], ["paint", "War paint", "toggle"]],
-    HAIR: [["hair", "Style", "thumb"], ["hairC", "Colour", "swatch"], ["tips", "Frosted tips", "toggle"], ["beard", "Facial hair", "thumb"]],
-    FIT: [["top", "Top", "thumb"], ["topC", "Main colour", "swatch"], ["top2", "Second colour", "swatch"], ["graphic", "Tee graphic", "thumb"]],
-    EXTRAS: [["hat", "Headwear", "thumb"], ["hatC", "Accent colour", "swatch"], ["glasses", "Eyewear", "thumb"], ["phones", "Headphones", "thumb"], ["neck", "Neck", "thumb"], ["ears", "Earrings", "thumb"]],
-    BACKDROP: [["bg", "Backdrop", "thumb"], ["bgC", "Backdrop colour", "swatch"]],
+    SHAPE: [["badge", "Shape", "thumb"]],
+    COLOUR: [["topC", "Main colour", "swatch"], ["top2", "Pattern colour", "swatch"]],
+    ICON: [["icon", "Icon", "thumb"]],
+    PATTERN: [["pat", "Pattern", "thumb"]],
   };
   function creator(prof) {
     const isNew = !prof;
     const p = prof || { lv: 1, ach: {}, crew: [] };
     let spec = { ...Avatar.DEFAULT, ...(prof ? prof.av : Avatar.random(Math.random, (o) => RPG.unlocked(p, o))) };
     let name = prof ? prof.name : "";
-    let tab = "FACE", expr = null;
+    let tab = "SHAPE", expr = null;
     osd("1P", "CREATE");
     function options(key) {
       const C = Avatar.CATALOG;
@@ -117,12 +112,12 @@ const UI = (() => {
         }).join("")}</div></div>`;
       }).join("");
       app().innerHTML = `<div class="screen creator">
-        <div class="ctop">${isNew ? `<h2 class="logo small">CREATE A FIGHTER</h2>` : back()}<input id="cname" maxlength="14" placeholder="Your name" value="${esc(name)}" aria-label="Name"></div>
+        <div class="ctop">${isNew ? `<h2 class="logo small">Make your channel badge</h2>` : back()}<input id="cname" maxlength="14" placeholder="Your name" value="${esc(name)}" aria-label="Name"></div>
         <div class="preview"><div class="pv" id="pv">${Avatar.svg(spec, { expr })}</div>
-          <div class="pvbtns"><button data-x="">🙂</button><button data-x="happy">😁</button><button data-x="shock">😮</button><button data-x="sad">😢</button><button data-x="talk">🗣️</button><button id="rand">🎲 RANDOM</button></div></div>
+          <div class="pvbtns"><button id="rand">🎲 SURPRISE ME</button></div></div>
         <div class="tabs">${Object.keys(TABS).map((t) => `<button class="${t === tab ? "on" : ""}" data-tab="${t}">${t}</button>`).join("")}</div>
         <div class="secs">${sections}</div>
-        <div class="csave"><button class="go big" id="save">${isNew ? "▶ ENTER THE ARENA" : "✔ SAVE LOOK"}</button></div></div>`;
+        <div class="csave"><button class="go big" id="save">${isNew ? "▶ GO ON AIR!" : "✔ SAVE BADGE"}</button></div></div>`;
       $("#cname").oninput = (e) => (name = e.target.value);
       $$("[data-tab]").forEach((b) => (b.onclick = () => { tab = b.dataset.tab; Sound.play("click"); render(); }));
       $$("[data-x]").forEach((b) => (b.onclick = () => { expr = b.dataset.x || null; $("#pv").innerHTML = Avatar.svg(spec, { expr }); Sound.play("click"); }));
@@ -135,10 +130,10 @@ const UI = (() => {
       }));
       $("#save").onclick = () => {
         name = ($("#cname").value || "").trim();
-        if (!name) { toast("Give your VJ a name first!"); $("#cname").focus(); return; }
+        if (!name) { toast("Give your channel a name first!"); $("#cname").focus(); return; }
         Sound.play("fanfare");
         if (isNew) { Core.create(name, spec); FX.confetti(60); home(); }
-        else { prof.name = name; prof.av = spec; Core.save(); toast("Lookin' fresh! ✨"); home(); }
+        else { prof.name = name; prof.av = spec; Core.save(); toast("Lookin' fresh!"); home(); }
       };
     }
     render();

@@ -186,7 +186,7 @@ const Modes = (() => {
     frame([pl], 0, `<div class="fbar" id="tug"><div class="fside fme"><b>${esc(p.name)}</b><span><i id="hpme"></i></span></div><div class="fround" id="frnd">1</div><div class="fside fthem"><b>${esc(vj.name)}</b><span><i id="hpthem"></i></span></div></div><div class="vjline" id="vjl"></div>`);
     const tug = () => { $("#hpme").style.width = `${100 - (Math.max(0, -m) / MAX) * 100}%`; $("#hpthem").style.width = `${100 - (Math.max(0, m) / MAX) * 100}%`; $("#frnd").textContent = n || 1; };
     tug();
-    await announce(["ROUND 1", "FIGHT!"]);
+    await announce(["ROUND 1", "GO!"]);
     const say = (k) => { const el = $("#vjl"); if (el) { el.innerHTML = `${Avatar.svg(vj.spec, { anim: false, cls: "tiny", expr: k === "right" ? "happy" : k === "wrong" ? "sad" : "talk" })}<span>“${esc(pick(vj.lines[k]))}”</span>`; el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); } };
     while (Math.abs(m) < MAX) {
       checkQuit(); n++;
@@ -219,7 +219,7 @@ const Modes = (() => {
       await sleep(500);
     }
     const won = m > 0;
-    await announce([won ? "K.O.!" : "YOU LOSE"], won ? "ko" : "lose");
+    await announce([won ? "WINNER!" : "CANCELLED!"], won ? "ko" : "lose");
     const c = p.career; (c.wars ||= {}); const w = (c.wars[vjId] ||= { w: 0, l: 0 }); won ? w.w++ : w.l++;
     let xp = pl.xp + (won ? 60 + vj.lv * 4 : 15), newCrew = false;
     if (won) { RPG.bump(p, "warWins"); p.packs += 1; if (!p.crew.includes(vjId)) { p.crew.push(vjId); newCrew = true; } }

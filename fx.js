@@ -1,155 +1,107 @@
-// Painted-style night backdrop, matching the "fighter select" mockup: an indigo-to-violet sky,
-// a huge orange moon with a glow, layered city and pagoda silhouettes, drifting purple clouds,
-// cherry-blossom petals and a few embers. Fights switch to a fiery red sky. Also: a diagonal
-// slash wipe between screens, a screen flash, and confetti.
+// Saturday-morning cartoon backdrop: a flat cartoon sky, a sun with turning rays, puffy outlined
+// clouds drifting by, rolling outlined hills, and a few bouncing doodles (stars, squiggles, dots).
+// Each channel theme is a different sky. Fights turn it into an orange "showdown" sky.
+// Between screens: a burst of TV static. Also confetti.
 const FX = (() => {
   "use strict";
   const cv = document.getElementById("fx"), g = cv.getContext("2d");
   const st = document.getElementById("static"), sx = st.getContext("2d");
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let W = 0, H = 0, dpr = 1, theme = "saturday", mood = "city", scene = null, petals = [], flash = null, last = 0;
+  let W = 0, H = 0, dpr = 1, theme = "saturday", mood = "city", clouds = [], doodles = [], last = 0;
   const t0 = performance.now();
-  // sky top, sky mid, horizon glow, moon, far city, near city, petal colour
+  // sky top, sky bottom, sun, far hills, near hills, doodle colours, night?
   const SKIES = {
-    saturday: ["#120a3a", "#3a1a7a", "#c04a9a", "#ff9a3a", "#2a1658", "#120a2e", "#ff8fc8"],
-    grunge: ["#05070f", "#16203a", "#3a4a70", "#dfe6f5", "#121a30", "#070a14", "#c8d8ff"],
-    rave: ["#0a0028", "#2a0a6a", "#ff2fb0", "#40f0ff", "#1a0a48", "#0a0220", "#ff7ae0"],
-    pastel: ["#2a1250", "#7a2a7a", "#ff8a5a", "#ffd166", "#3a1a50", "#1a0a28", "#ffc0d8"],
-    arcade: ["#0b0020", "#3a0a6a", "#ff2fd0", "#ffb23f", "#22084a", "#0b0020", "#ff9ae0"],
-    hyper: ["#00203a", "#2a1a7a", "#ff3f8e", "#ffe14d", "#1a1a50", "#0a0a20", "#9ff8ff"],
-    gold: ["#1a0e04", "#4a2a08", "#e0a030", "#fff1a8", "#2a1806", "#120a02", "#ffe39a"],
-    war: ["#1a0206", "#6a0a14", "#ff5a1a", "#ffd23f", "#3a0610", "#1a0206", "#ffb04a"],
+    saturday: ["#2ab0ff", "#a8e4ff", "#ffd21f", "#6ad84a", "#3ab83a", ["#ff4a3a", "#ffd21f", "#ff5ab0", "#ffffff"]],
+    grunge: ["#6a7a8a", "#b8c4cc", "#e8e8d8", "#5a8a5a", "#3a6a3a", ["#ffffff", "#c8d8e8"]],
+    rave: ["#1a1060", "#5a3ab0", "#f4f1ea", "#3a2a80", "#2a1a60", ["#ffd21f", "#ff5ab0", "#2ab0ff"], true],
+    pastel: ["#ff8ab8", "#ffd8a8", "#fff3a0", "#ff9a6a", "#e86a5a", ["#ffffff", "#ffd21f", "#b05aff"]],
+    arcade: ["#0a0a3a", "#3a1a7a", "#ff8ad8", "#2a2a6a", "#1a1a4a", ["#ffd21f", "#2ab0ff", "#ff5ab0", "#4ad04a"], true],
+    hyper: ["#ff5ab0", "#ffd21f", "#ffffff", "#4ad04a", "#2ab0ff", ["#ff4a3a", "#5a5aff", "#ffffff"]],
+    gold: ["#ffb21f", "#fff3a0", "#ffffff", "#e0a030", "#c08020", ["#ffffff", "#ff8a1a"]],
+    war: ["#ff6a1a", "#ffd21f", "#fff3a0", "#e8402a", "#b82a1a", ["#ffffff", "#2a2a3a"]],
   };
-  function rng(seed) { let s = seed >>> 0; return () => ((s = (Math.imul(s ^ (s >>> 15), 2246822507) + 0x9e3779b9) >>> 0) / 4294967296); }
   function size() {
-    dpr = 1 / 3; W = innerWidth; H = innerHeight; // drawn at a third of the size and shown with hard pixels
-    for (const c of [cv, st]) { c.width = W * dpr; c.height = H * dpr; c.style.width = W + "px"; c.style.height = H + "px"; }
-    g.setTransform(dpr, 0, 0, dpr, 0, 0); sx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    scene = null;
-    const r = rng(5);
-    petals = Array.from({ length: Math.round((W * H) / 14000) + 14 }, () => ({ x: r() * W, y: r() * H, s: 2 + r() * 4, vx: 10 + r() * 22, vy: 14 + r() * 26, ph: r() * 6.3, ember: r() < 0.25 }));
+    dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px"; g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    st.width = Math.ceil(W / 3); st.height = Math.ceil(H / 3);
+    clouds = Array.from({ length: 5 }, (_, i) => ({ x: Math.random() * W, y: H * (0.06 + i * 0.1), s: (0.5 + Math.random() * 0.5) * Math.min(1, W / 600 + 0.4), sp: 8 + Math.random() * 14 }));
+    doodles = Array.from({ length: 9 }, (_, i) => ({ x: Math.random() * W, y: H * (0.1 + Math.random() * 0.55), k: i % 3, ph: Math.random() * 6.3, r: 8 + Math.random() * 8, c: i }));
   }
   addEventListener("resize", size);
   size();
 
-  // skyline silhouette with pagoda roofs and towers
-  function skyline(x, base, h, col, r, pagodas) {
-    x.fillStyle = col; x.beginPath(); x.moveTo(0, H);
-    let px = -10;
-    while (px < W + 20) {
-      const w = 18 + r() * 46, bh = h * (0.35 + r() * 0.65);
-      if (pagodas && r() < 0.18) {
-        // tiered pagoda
-        const cx = px + w / 2;
-        x.lineTo(px, base - bh * 0.3);
-        for (let k = 0; k < 4; k++) { const yy = base - bh * (0.3 + k * 0.18), ww = w * (0.75 - k * 0.12); x.lineTo(cx - ww, yy); x.lineTo(cx - ww * 0.6, yy - 6); }
-        x.lineTo(cx, base - bh * 1.15);
-        for (let k = 3; k >= 0; k--) { const yy = base - bh * (0.3 + k * 0.18), ww = w * (0.75 - k * 0.12); x.lineTo(cx + ww * 0.6, yy - 6); x.lineTo(cx + ww, yy); }
-        x.lineTo(px + w, base - bh * 0.3);
-      } else {
-        x.lineTo(px, base - bh); if (r() < 0.3) { x.lineTo(px + w * 0.45, base - bh); x.lineTo(px + w * 0.5, base - bh - 14); x.lineTo(px + w * 0.55, base - bh); }
-        x.lineTo(px + w, base - bh);
-      }
-      px += w;
-    }
-    x.lineTo(W + 20, H); x.closePath(); x.fill();
+  const OUT = "#111";
+  // a puffy cloud: outline every puff first, then fill them all white, so only the outer edge shows
+  const PUFFS = [[0, 0, 24], [28, -18, 30], [62, -12, 26], [84, 4, 18], [40, 6, 26]];
+  function cloud(x, y, s) {
+    g.save(); g.translate(x, y); g.scale(s, s);
+    g.fillStyle = OUT; for (const [px, py, r] of PUFFS) { g.beginPath(); g.arc(px, py, r + 4 / s, 0, 6.3); g.fill(); }
+    g.fillStyle = "#fff"; for (const [px, py, r] of PUFFS) { g.beginPath(); g.arc(px, py, r, 0, 6.3); g.fill(); }
+    g.restore();
   }
-  function build(P) {
-    const c = document.createElement("canvas"); c.width = W * dpr; c.height = H * dpr;
-    const x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const r = rng(9);
-    const sky = x.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, P[0]); sky.addColorStop(0.45, P[1]); sky.addColorStop(0.78, P[2]); sky.addColorStop(1, P[5]);
-    x.fillStyle = sky; x.fillRect(0, 0, W, H);
-    // stars
-    for (let i = 0; i < 90; i++) { x.fillStyle = `rgba(255,255,255,${0.2 + r() * 0.6})`; x.fillRect(r() * W, r() * H * 0.45, 1.5, 1.5); }
-    // moon with a big soft glow
-    const mx = W * 0.62, my = H * 0.24, mr = Math.min(W, H) * 0.17;
-    const glow = x.createRadialGradient(mx, my, mr * 0.6, mx, my, mr * 3.2);
-    glow.addColorStop(0, P[3] + "88"); glow.addColorStop(1, P[3] + "00");
-    x.fillStyle = glow; x.fillRect(0, 0, W, H);
-    const mg = x.createRadialGradient(mx - mr * 0.3, my - mr * 0.3, mr * 0.1, mx, my, mr);
-    mg.addColorStop(0, "#fff6d0"); mg.addColorStop(0.5, P[3]); mg.addColorStop(1, P[2]);
-    x.fillStyle = mg; x.beginPath(); x.arc(mx, my, mr, 0, Math.PI * 2); x.fill();
-    x.fillStyle = "rgba(120,40,60,.18)"; for (let i = 0; i < 6; i++) { x.beginPath(); x.arc(mx + (r() - 0.5) * mr, my + (r() - 0.5) * mr, mr * (0.08 + r() * 0.12), 0, 6.3); x.fill(); }
-    // painterly cloud streaks across the moon
-    for (let i = 0; i < 7; i++) {
-      const cy = H * (0.12 + r() * 0.4), cw = W * (0.4 + r() * 0.6), cx = r() * W - cw / 3;
-      const cg = x.createLinearGradient(cx, cy, cx + cw, cy);
-      cg.addColorStop(0, "rgba(60,20,110,0)"); cg.addColorStop(0.5, `rgba(${80 + r() * 60},${30 + r() * 30},${130 + r() * 60},.55)`); cg.addColorStop(1, "rgba(60,20,110,0)");
-      x.fillStyle = cg; x.beginPath(); x.ellipse(cx + cw / 2, cy, cw / 2, 6 + r() * 14, -0.05, 0, 6.3); x.fill();
-    }
-    // far skyline with pagodas, lit windows, then the near skyline
-    skyline(x, H * 0.86, H * 0.32, P[4], r, true);
-    for (let i = 0; i < 160; i++) { x.fillStyle = r() < 0.5 ? "rgba(255,200,120,.55)" : "rgba(150,200,255,.45)"; x.fillRect(r() * W, H * (0.6 + r() * 0.3), 2, 3); }
-    // mist band
-    const mist = x.createLinearGradient(0, H * 0.78, 0, H);
-    mist.addColorStop(0, "rgba(200,90,200,0)"); mist.addColorStop(0.5, "rgba(200,90,200,.25)"); mist.addColorStop(1, "rgba(20,8,40,.8)");
-    x.fillStyle = mist; x.fillRect(0, H * 0.78, W, H * 0.22);
-    skyline(x, H * 1.02, H * 0.2, P[5], r, false);
-    // cherry-blossom branches in the top-left corner
-    x.strokeStyle = "#1a0820"; x.lineCap = "round";
-    const branch = (bx, by, a, len, w) => { if (len < 8) return; const ex = bx + Math.cos(a) * len, ey = by + Math.sin(a) * len; x.lineWidth = w; x.beginPath(); x.moveTo(bx, by); x.lineTo(ex, ey); x.stroke(); for (let k = 0; k < 6; k++) { x.fillStyle = k % 2 ? P[6] : "#ffd6ec"; x.globalAlpha = 0.85; x.beginPath(); x.arc(ex + (r() - 0.5) * 22, ey + (r() - 0.5) * 18, 3 + r() * 5, 0, 6.3); x.fill(); } x.globalAlpha = 1; branch(ex, ey, a + (r() - 0.3) * 0.8, len * 0.72, w * 0.7); if (r() < 0.6) branch(ex, ey, a - 0.6 - r() * 0.5, len * 0.6, w * 0.6); };
-    branch(-10, H * 0.08, 0.25, Math.min(W, 520) * 0.22, 7);
-    branch(W + 10, H * 0.55, Math.PI + 0.35, Math.min(W, 520) * 0.18, 6);
-    // vignette
-    const vg = x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.8);
-    vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(5,0,20,.65)");
-    x.fillStyle = vg; x.fillRect(0, 0, W, H);
-    // 16-bit look: limited palette with ordered dithering
-    const cx = c.getContext("2d"), im = cx.getImageData(0, 0, c.width, c.height), d = im.data, BAY = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5], step = 255 / 7;
-    for (let y = 0; y < c.height; y++) for (let xx = 0; xx < c.width; xx++) { const i = (y * c.width + xx) * 4, t = BAY[(y & 3) * 4 + (xx & 3)] / 16 - 0.5; for (let k = 0; k < 3; k++) d[i + k] = Math.max(0, Math.min(255, Math.round(d[i + k] / step + t * 0.9) * step)); }
-    cx.putImageData(im, 0, 0);
-    return { c, P };
+  function hills(yBase, amp, col, phase) {
+    g.beginPath(); g.moveTo(0, H);
+    for (let x = 0; x <= W + 20; x += 20) g.lineTo(x, yBase - Math.sin(x / 140 + phase) * amp - Math.sin(x / 61 + phase * 2) * amp * 0.3);
+    g.lineTo(W, H); g.closePath(); g.fillStyle = col; g.fill(); g.lineWidth = 4; g.strokeStyle = OUT; g.stroke();
+  }
+  function doodle(d, t, cols) {
+    const y = d.y + Math.sin(t * 2 + d.ph) * 8, x = d.x, c = cols[d.c % cols.length];
+    g.save(); g.translate(x, y); g.rotate(Math.sin(t + d.ph) * 0.3); g.lineWidth = 4; g.strokeStyle = OUT; g.fillStyle = c;
+    if (d.k === 0) { g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? d.r * 0.45 : d.r, a = -Math.PI / 2 + (i * Math.PI) / 5; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.closePath(); g.fill(); g.stroke(); }
+    else if (d.k === 1) { g.strokeStyle = c; g.lineWidth = 5; g.beginPath(); g.moveTo(-d.r * 1.4, 0); for (let i = 1; i <= 4; i++) g.quadraticCurveTo(-d.r * 1.4 + (i - 0.5) * d.r * 0.7, (i % 2 ? -1 : 1) * d.r * 0.6, -d.r * 1.4 + i * d.r * 0.7, 0); g.stroke(); }
+    else { g.beginPath(); g.arc(0, 0, d.r * 0.55, 0, 6.3); g.fill(); g.stroke(); }
+    g.restore();
   }
   function frame(now) {
     requestAnimationFrame(frame);
     if (now - last < 33) return; last = now;
-    const t = (now - t0) / 1000;
-    const P = SKIES[mood === "war" ? "war" : theme] || SKIES.saturday;
-    if (!scene || scene.P !== P) scene = build(P);
-    g.drawImage(scene.c, 0, 0, W, H);
-    if (theme === "hyper" && mood !== "war") { g.fillStyle = `hsla(${(t * 30) % 360},90%,55%,.15)`; g.fillRect(0, 0, W, H); }
-    // falling petals (or embers in a fight)
-    for (const p of petals) {
-      if (!reduce) { p.x += p.vx / 30; p.y += p.vy / 30; if (p.y > H + 10) { p.y = -10; p.x = Math.random() * W; } if (p.x > W + 10) p.x = -10; }
-      const ember = mood === "war" || p.ember;
-      g.save(); g.translate(p.x, p.y); g.rotate(t * 2 + p.ph);
-      g.fillStyle = ember ? `rgba(255,${150 + Math.sin(t * 5 + p.ph) * 80},60,.85)` : P[6];
-      g.globalAlpha = ember ? 0.9 : 0.75;
-      g.beginPath(); g.ellipse(0, 0, p.s, p.s * 0.55, 0, 0, 6.3); g.fill(); g.restore();
-    }
-    g.globalAlpha = 1;
-    if (flash && now < flash.until) { g.fillStyle = `rgba(${flash.rgb},${(((flash.until - now) / 300) * 0.4).toFixed(2)})`; g.fillRect(0, 0, W, H); }
+    const t = (now - t0) / 1000, P = SKIES[mood === "war" ? "war" : theme] || SKIES.saturday, night = P[6];
+    const sky = g.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, P[0]); sky.addColorStop(0.7, P[1]);
+    g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    // sun (or moon) with turning rays
+    const sx0 = W * 0.8, sy0 = H * 0.14, sr = Math.min(W, H) * 0.09;
+    if (!night) {
+      g.save(); g.translate(sx0, sy0); g.rotate(reduce ? 0 : t * 0.15);
+      g.fillStyle = P[2]; g.globalAlpha = 0.55;
+      for (let i = 0; i < 12; i++) { g.rotate(Math.PI / 6); g.beginPath(); g.moveTo(-sr * 0.25, sr * 1.15); g.lineTo(0, sr * 2.1); g.lineTo(sr * 0.25, sr * 1.15); g.fill(); }
+      g.restore(); g.globalAlpha = 1;
+    } else for (let i = 0; i < 40; i++) { g.fillStyle = "#fff"; const xx = (i * 97) % W, yy = (i * 53) % (H * 0.55), k = 1 + (Math.sin(t * 2 + i) > 0.6 ? 1 : 0); g.fillRect(xx, yy, 2 * k, 2 * k); }
+    g.beginPath(); g.arc(sx0, sy0, sr, 0, 6.3); g.fillStyle = P[2]; g.fill(); g.lineWidth = 4; g.strokeStyle = OUT; g.stroke();
+    if (night) { g.beginPath(); g.arc(sx0 + sr * 0.4, sy0 - sr * 0.2, sr * 0.85, 0, 6.3); g.fillStyle = P[0]; g.fill(); }
+    // clouds
+    for (const c of clouds) { if (!reduce) c.x += c.sp / 30; if (c.x > W + 20) c.x = -140; cloud(c.x, c.y, c.s); }
+    for (const d of doodles) doodle(d, reduce ? 0 : t, P[5]);
+    // rolling hills
+    hills(H * 0.8, 26, P[3], 0.5); hills(H * 0.9, 18, P[4], 2.1);
   }
   requestAnimationFrame(frame);
 
   function setTheme(id) { theme = SKIES[id] ? id : "saturday"; document.body.dataset.theme = theme; }
   function setMood(m) { mood = m === "war" ? "war" : "city"; }
 
-  // ---------- slash wipe: a gold then indigo diagonal swipe ----------
-  let wipeStart = 0, wipeLen = 0, wipeRaf = 0;
-  function wipeFrame() {
-    const f = (performance.now() - wipeStart) / wipeLen;
-    sx.clearRect(0, 0, W, H);
-    if (f >= 1) { st.style.opacity = 0; wipeRaf = 0; return; }
-    st.style.opacity = 1;
-    const band = (off, col) => { const e = Math.min(1, Math.max(0, (f - off) * 2.2)), pos = -1.3 * W + e * 3.6 * W; sx.fillStyle = col; sx.beginPath(); sx.moveTo(pos, 0); sx.lineTo(pos + W * 0.8, 0); sx.lineTo(pos + W * 0.8 - H * 0.4, H); sx.lineTo(pos - H * 0.4, H); sx.fill(); };
-    band(0, "#2830a8"); band(0.06, "#ffd21f"); band(0.12, "#0a0830");
-    wipeRaf = requestAnimationFrame(wipeFrame);
+  // ---------- TV static between screens ----------
+  let end = 0, raf = 0;
+  function noise() {
+    const left = end - performance.now();
+    if (left <= 0) { sx.clearRect(0, 0, st.width, st.height); st.style.opacity = 0; raf = 0; return; }
+    st.style.opacity = Math.min(1, left / 120);
+    const im = sx.createImageData(st.width, st.height), d = im.data;
+    for (let i = 0; i < d.length; i += 4) { const v = Math.random() * 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+    sx.putImageData(im, 0, 0);
+    sx.fillStyle = "rgba(0,0,0,.35)"; sx.fillRect(0, (performance.now() / 8) % st.height, st.width, 10);
+    raf = requestAnimationFrame(noise);
   }
-  function burst(ms = 420) {
+  function burst(ms = 380) {
     if (!Core.set.motion || reduce) ms = Math.min(ms, 140);
-    wipeStart = performance.now(); wipeLen = ms; Sound.play("whoosh");
-    if (!wipeRaf) wipeRaf = requestAnimationFrame(wipeFrame);
-    return Core.sleep(ms * 0.55);
+    end = performance.now() + ms; st.style.opacity = 1; Sound.play("static", ms / 1000);
+    if (!raf) raf = requestAnimationFrame(noise);
+    return Core.sleep(ms * 0.6);
   }
-  const cheer = () => { flash = { until: performance.now() + 300, rgb: "255,230,160" }; };
-  const gasp = () => { flash = { until: performance.now() + 300, rgb: "255,60,80" }; };
+  const cheer = () => {}, gasp = () => {};
   function confetti(n = 40, el = document.body) {
     if (!Core.set.motion) return;
     const box = document.createElement("div"); box.className = "confetti"; el.appendChild(box);
-    const cols = ["#ffc21f", "#ff4a8a", "#5ad8ff", "#ffffff", "#b06aff"];
+    const cols = ["#ff4a3a", "#ffd21f", "#2ab0ff", "#4ad04a", "#ff5ab0", "#b05aff"];
     for (let i = 0; i < n; i++) {
       const p = document.createElement("i");
       p.style.cssText = `left:${Math.random() * 90 + 5}%;background:${cols[i % cols.length]};--dx:${Math.random() * 240 - 120}px;--r:${Math.random() * 1440 - 720}deg;animation-delay:${Math.random() * 0.25}s;animation-duration:${1.1 + Math.random() * 0.8}s;`;

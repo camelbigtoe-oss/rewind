@@ -75,7 +75,7 @@ const Rounds = (() => {
       const perkOK = perk && perkApplies(opts.perk.id, q);
       const vj = opts.vj;
       // the character who "asks" the question: the rival in a fight, otherwise your co-host
-      const faceSpec = opts.face || (vj && vj.spec) || Cast.VJ[(Core.me() && Core.me().cohost) || "remix"].spec;
+      const faceSpec = null; // no characters in the cartoon look
       host.innerHTML = `<div class="qcard t-${q.type}${q.blitz ? " t-blitz" : ""}">
         <div class="qhead"><span class="chan">${opts.label || "CH " + String(T.ch).padStart(2, "0")}</span><span class="qcat">${cat}</span>${opts.mult > 1 ? `<span class="mult">×${opts.mult}</span>` : ""}</div>
         <div class="timer"><i></i><b></b></div>
@@ -195,7 +195,7 @@ const Rounds = (() => {
           b.querySelector("span").textContent = `${vj.name} ${said} ${vj.ok ? "✔" : "✘"}${vj.pick != null ? ` (${(vj.at / 1000).toFixed(1)}s)` : ""}`;
         }
         if (!opts.quick) {
-          const words = ok ? ["NICE!", "RIGHT!", "GREAT!", "SUGOI!", "BINGO!"] : ["MISS!", "NOPE!", "OUCH!", "NOT!"];
+          const words = ok ? ["AWESOME!", "RADICAL!", "BINGO!", "TUBULAR!", "SWEET!"] : ["WHOOPS!", "BOGUS!", "OOPS!", "NOT!"];
           const b = document.createElement("div"); b.className = "burst " + (ok ? "ok" : "no");
           b.innerHTML = `<span>${words[Math.floor(Math.random() * words.length)]}</span>`; card.appendChild(b);
         }
