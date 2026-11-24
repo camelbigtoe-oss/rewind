@@ -22,7 +22,7 @@ const FX = (() => {
   };
   function rng(seed) { let s = seed >>> 0; return () => ((s = (Math.imul(s ^ (s >>> 15), 2246822507) + 0x9e3779b9) >>> 0) / 4294967296); }
   function size() {
-    dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+    dpr = 1 / 3; W = innerWidth; H = innerHeight; // drawn at a third of the size and shown with hard pixels
     for (const c of [cv, st]) { c.width = W * dpr; c.height = H * dpr; c.style.width = W + "px"; c.style.height = H + "px"; }
     g.setTransform(dpr, 0, 0, dpr, 0, 0); sx.setTransform(dpr, 0, 0, dpr, 0, 0);
     scene = null;
@@ -96,6 +96,10 @@ const FX = (() => {
     const vg = x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.8);
     vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(5,0,20,.65)");
     x.fillStyle = vg; x.fillRect(0, 0, W, H);
+    // 16-bit look: limited palette with ordered dithering
+    const cx = c.getContext("2d"), im = cx.getImageData(0, 0, c.width, c.height), d = im.data, BAY = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5], step = 255 / 7;
+    for (let y = 0; y < c.height; y++) for (let xx = 0; xx < c.width; xx++) { const i = (y * c.width + xx) * 4, t = BAY[(y & 3) * 4 + (xx & 3)] / 16 - 0.5; for (let k = 0; k < 3; k++) d[i + k] = Math.max(0, Math.min(255, Math.round(d[i + k] / step + t * 0.9) * step)); }
+    cx.putImageData(im, 0, 0);
     return { c, P };
   }
   function frame(now) {
@@ -131,7 +135,7 @@ const FX = (() => {
     if (f >= 1) { st.style.opacity = 0; wipeRaf = 0; return; }
     st.style.opacity = 1;
     const band = (off, col) => { const e = Math.min(1, Math.max(0, (f - off) * 2.2)), pos = -1.3 * W + e * 3.6 * W; sx.fillStyle = col; sx.beginPath(); sx.moveTo(pos, 0); sx.lineTo(pos + W * 0.8, 0); sx.lineTo(pos + W * 0.8 - H * 0.4, H); sx.lineTo(pos - H * 0.4, H); sx.fill(); };
-    band(0, "#ffc21f"); band(0.06, "#ff4a8a"); band(0.12, "#140a3a");
+    band(0, "#2830a8"); band(0.06, "#ffd21f"); band(0.12, "#0a0830");
     wipeRaf = requestAnimationFrame(wipeFrame);
   }
   function burst(ms = 420) {

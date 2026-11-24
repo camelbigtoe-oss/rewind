@@ -64,7 +64,7 @@ const Avatar = (() => {
     ears: [{ id: "none", name: "None" }, { id: "stud", name: "Studs" }, { id: "hoops", name: "Hoops" }, { id: "cross", name: "Dangly cross", lv: 8 }],
     phones: [{ id: "none", name: "None" }, { id: "foam", name: "Foam headphones", lv: 2 }, { id: "big", name: "DJ cans", vj: "spinz" }],
     bg: [
-      { id: "memphis", name: "Spotlight" }, { id: "checker", name: "Halftone" }, { id: "zigzag", name: "Lightning" }, { id: "stars", name: "Night city" },
+      { id: "memphis", name: "Select blue" }, { id: "checker", name: "Halftone" }, { id: "zigzag", name: "Lightning" }, { id: "stars", name: "Night city" },
       { id: "speed", name: "Speed lines", lv: 3 }, { id: "grid", name: "Neon grid", lv: 6 }, { id: "flames", name: "Flames", lv: 9 }, { id: "bars", name: "Colour bars", lv: 11 },
       { id: "static", name: "Static", lv: 13 }, { id: "gold", name: "Gold champion", ach: "platinum" },
     ],
@@ -322,7 +322,7 @@ const Avatar = (() => {
       case "bars": return ["#c0c0c0", "#c0c000", "#00c0c0", "#00c000", "#c000c0", "#c00000", "#0000c0"].map((col, i) => `<rect x="${i * 200 / 7}" y="0" width="${200 / 7 + 1}" height="240" fill="${col}"/>`).join("") + `<rect y="180" width="200" height="60" fill="#111"/>`;
       case "static": return `<defs><filter id="ns${id}"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="${id}"/><feColorMatrix values="0 0 0 0 .8  0 0 0 0 .8  0 0 0 0 .8  0 0 0 1.6 -.4"/></filter></defs><rect width="200" height="240" fill="#555"/><rect width="200" height="240" filter="url(#ns${id})" class="noise"/>`;
       case "gold": return `<rect width="200" height="240" fill="#2a1a05"/>${rays(24, "#ffd23f", "#d9a520")}<circle cx="100" cy="110" r="46" fill="#fff6c8" opacity=".5"/>`;
-      default: return `<defs><radialGradient id="sp${id}" cx="60%" cy="35%" r="80%"><stop offset="0" stop-color="${shade(c, 0.45)}"/><stop offset=".45" stop-color="${shade(c, -0.25)}"/><stop offset="1" stop-color="#140630"/></radialGradient><filter id="bl${id}"><feGaussianBlur stdDeviation="8"/></filter></defs><rect width="200" height="240" fill="url(#sp${id})"/><g filter="url(#bl${id})" opacity=".55"><path d="M-20 70 L220 30 L220 46 L-20 92Z" fill="#ff7ad8"/><path d="M-20 160 L220 110 L220 122 L-20 176Z" fill="#7ae8ff" opacity=".6"/><circle cx="150" cy="60" r="30" fill="#ffd88a"/></g>`;
+      default: return `<defs><linearGradient id="sp${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(c, 0.25)}"/><stop offset="1" stop-color="${shade(c, -0.45)}"/></linearGradient></defs><rect width="200" height="240" fill="url(#sp${id})"/>`; // arcade select-screen blue
     }
   }
   // full avatar, painted in a 90s anime select-screen style: gradient fills instead of flat colour,
@@ -365,8 +365,6 @@ const Avatar = (() => {
         <g clip-path="url(#bd${id})">
           <path d="M116 156 C156 166 196 196 196 240 H128 C142 212 138 182 116 156Z" fill="#12061e" opacity=".42" filter="url(#sb${id})"/>
           <path d="M70 158 Q100 176 130 158 L132 172 Q100 188 68 172Z" fill="#12061e" opacity=".35" filter="url(#sb${id})"/>
-          <path d="M168 176 C184 192 192 214 192 240" stroke="#ff7ad8" stroke-width="5" fill="none" opacity=".75" filter="url(#sf${id})"/>
-          <path d="M28 186 C18 202 12 220 10 240" stroke="#7ae8ff" stroke-width="4" fill="none" opacity=".55" filter="url(#sf${id})"/>
         </g>
         ${paint(neckwear(s))}
       </g>
@@ -383,8 +381,6 @@ const Avatar = (() => {
           <ellipse cx="72" cy="100" rx="10" ry="7" fill="#fff" opacity=".18" filter="url(#sb${id})"/>
           <path d="M100 98 L100 110" stroke="#fff" stroke-width="2.5" opacity=".35" filter="url(#sf${id})"/>
         </g>
-        <g clip-path="url(#rr${id})"><path d="${head}" fill="none" stroke="#ff7ad8" stroke-width="6" opacity=".7" filter="url(#sf${id})"/></g>
-        <g clip-path="url(#rl${id})"><path d="${head}" fill="none" stroke="#7ae8ff" stroke-width="4" opacity=".4" filter="url(#sf${id})"/></g>
         <path d="M66 112 L74 120 M134 112 L126 120" stroke="${skD}" stroke-width="1.8" stroke-linecap="round" opacity=".8"/>
         ${s.paint ? `<path d="M66 104 L90 106 L66 110Z M66 113 L88 113 L66 117Z M134 104 L110 106 L134 110Z M134 113 L112 113 L134 117Z" fill="${s.hatC}" stroke="#1c0a1e" stroke-width="1"/>` : ""}
         ${s.scar ? `<path d="M118 78 L128 108 M117 86 L123 84 M120 95 L126 93 M123 103 L129 101" stroke="#8a2a3a" stroke-width="2.2" stroke-linecap="round"/>` : ""}
@@ -426,7 +422,7 @@ const Avatar = (() => {
   // painted art for a character (spec.art, a file in art/) wins; otherwise the cel-shaded vector portrait
   function svg(spec, opts = {}) {
     if (spec && spec.art) return `<img class="av art ${opts.cls || ""} ${opts.anim === false ? "" : "bob"}" src="${spec.art}" alt="" draggable="false">`;
-    return vsvg(spec, opts);
+    return Pixel.img(spec, opts);
   }
 
   function random(rnd = Math.random, ok = () => true) {

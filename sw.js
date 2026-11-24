@@ -1,5 +1,5 @@
 // Offline cache for REWIND TV. Bump VERSION after changing any file.
-const VERSION = "rewind-v6";
+const VERSION = "rewind-v7";
 const CORE = [
   "./", "index.html", "style.css", "core.js", "bank.js", "q-tv.js", "q-toons.js", "q-music.js", "q-movies.js", "q-toys.js", "q-oz.js", "q-special.js",
   "pics.js", "avatar.js", "pixel.js", "cast.js", "rpg.js", "audio.js", "fx.js", "rounds.js", "modes.js", "ui.js",
